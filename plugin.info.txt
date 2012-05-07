@@ -1,0 +1,7 @@
+base now
+author me
+email me@someplace.com
+date 2005-07-28
+name Now Plugin
+desc Include the current date and time
+url http://www.dokuwiki.org/devel:syntax_plugins
