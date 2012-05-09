@@ -54,7 +54,11 @@ class syntax_plugin_dtable extends DokuWiki_Syntax_Plugin {
 
     function render($mode, &$renderer, $data) {
         if($mode == 'xhtml'){
-	    //$renderer->doc .= var_export($data, true);
+
+	$renderer->doc .= var_export($_POST, true);
+	    $bazy_dir = $this->getConf('bases_dir');
+	    $tr_hover_color = $this->getConf('tr_hover_backgroundcolor');;
+	    $BUTTONS = '1';
 
 	    $NAZWA_BAZY = $data['file'];
 	    $NAGLOWKI = $data['fileds']['all'];
@@ -90,14 +94,17 @@ class syntax_plugin_dtable extends DokuWiki_Syntax_Plugin {
 	    $grupy = $sesja['auth']['info']['grps'];
 
 	    $id_of_page = explode(':', $_GET['id']);
+
+	    if(isset($grupy) && in_array('user', $grupy)) { 
 	    $renderer->doc .= '
 	    <script type="text/javascript">
 	    window.onload = function()
 	    {';
 
-	    if(isset($grupy) && in_array('user', $grupy)) { 
 	    $renderer->doc .='
 	    var add_file = document.getElementById("wstaw_plik");
+	    var tr_color = "#fff";
+
 	    add_file.onclick = function()
 	    {
 	    window.open("http://wiki.rid.pl/lib/exe/mediamanager.php?ns='.$id_of_page[0].'&edid=wiki__text", "pliki","width=800,height=600");
@@ -113,74 +120,78 @@ class syntax_plugin_dtable extends DokuWiki_Syntax_Plugin {
 		var hover_tr = document.getElementsByClassName("tr_hover");
 		for(i=0;i<hover_tr.length;i++)
 		{
-			hover_tr[i].style.backgroundColor="#fff";
+			hover_tr[i].style.backgroundColor=tr_color;
 
 		}
 	    }
 	    id("aDodaj").onclick = function()
 	    {
-	    id("aform").style.display = "table-row";
-	    id("divContext").style.display = "none";
-	    clear_tr_hover();
-	    var td = id("aform").getElementsByTagName("td");
-	    var td0 = td[0];
-	    td0.firstChild.focus();
-	    } 
+		id("aform").style.display = "table-row";
+		id("divContext").style.display = "none";
+		clear_tr_hover();
+		var td = id("aform").getElementsByTagName("td");
+		var td0 = td[0];
+		td0.firstChild.focus();
+	    } ';
+	    if($BUTTONS == '0')
+	    {
+	    $renderer->doc .= '
 	    document.ondblclick = function()
 	    {
-	    form = document.getElementsByTagName("form");
-	    form = form[0];
-	    var any_not_blank = false;
-	    var inputs = form.getElementsByTagName("input");
-	    for(var i=0;i<inputs.length;i++)
-	    {
-		console.log(inputs[i]);
-		if(inputs[i].value != "")
+		form = document.getElementsByTagName("form");
+		form = form[0];
+		var any_not_blank = false;
+		var inputs = form.getElementsByTagName("input");
+		for(var i=0;i<inputs.length;i++)
 		{
-		  any_not_blank = true;
-		  break;
-		}
-	    }
-	    if(any_not_blank == false)
-	    {
-		var text = form.getElementsByTagName("textarea");
-		for(var i=0;i<text.length;i++)
-		{
-		    if(text[i].textContent != "")
+		    console.log(inputs[i]);
+		    if(inputs[i].value != "")
 		    {
 		      any_not_blank = true;
 		      break;
 		    }
 		}
-	    }
-	    if(any_not_blank == true)
-	    {
-		form.submit();
-	    } else
-	    {
-		id("aform").style.display = "none";
-	    }
+		if(any_not_blank == false)
+		{
+		    var text = form.getElementsByTagName("textarea");
+		    for(var i=0;i<text.length;i++)
+		    {
+			if(text[i].textContent != "")
+			{
+			  any_not_blank = true;
+			  break;
+			}
+		    }
+		}
+		if(any_not_blank == true)
+		{
+		    form.submit();
+		} else
+		{
+		    id("aform").style.display = "none";
+		}
 	    }
 	    var add_events = function(nodes) {
-	    for(var i=0;i<nodes.length;i++)
-	    {
-	    nodes[i].ondblclick = function(e) {
-	     var event = e || window.event;
+		for(var i=0;i<nodes.length;i++)
+		{
+		    nodes[i].ondblclick = function(e) {
+			 var event = e || window.event;
 
-	     if (event.stopPropagation) {
-	       event.stopPropagation();
-	     } else {
-	       event.cancelBubble = true;
-	    } 
-	    }
-	    }
+			 if (event.stopPropagation) {
+			   event.stopPropagation();
+			 } else {
+			   event.cancelBubble = true;
+			} 
+		    }
+		}
 	    }
 	    var inputs_elm = document.getElementsByTagName("input");
 	    var textarea_elm = document.getElementsByTagName("textarea"); 
 	    add_events(inputs_elm);
-	    add_events(textarea_elm);
+	    add_events(textarea_elm);';
+	    }
 
-	    var _replaceContext = false;		// replace the system context menu?
+	    $renderer->doc .= ' var _replaceContext = false;		// replace the system context menu?
 	    var _mouseOverContext = false;		// is the mouse over the context menu?
 	    var _divContext = id("divContext");	// makes my life easier
 
@@ -261,8 +272,17 @@ class syntax_plugin_dtable extends DokuWiki_Syntax_Plugin {
 		if (_replaceContext)
 		{
 			clear_tr_hover();
-			target.parentNode.style.backgroundColor="#EFF3F6";
-			
+			var tr = target
+			while(tr != document)
+			{
+			    if(tr.tagName.toLowerCase() == "tr")
+			    {
+				tr_color = tr.style.backgroundColor;
+				tr.style.backgroundColor="#'.$tr_hover_color.'";
+			    }
+			    tr = tr.parentNode;
+			}	
+			    
 			var tr_id;
 			
 			elm = target.parentNode;
@@ -293,171 +313,144 @@ class syntax_plugin_dtable extends DokuWiki_Syntax_Plugin {
 		}
 	    }
 
-	    var hover_tr = document.getElementsByClassName("tr_hover");
+	    ';
 
-	    for(i=0;i<hover_tr.length;i++)
-	    {
-	    hover_tr[i].onmousemove = function() {
-	     if(_divContext.style.display == "none") 
-	     {
-	       this.style.backgroundColor="#EFF3F6"; 
-	     }
-	    }   
-	    hover_tr[i].onmouseout = function() {
-	     if(_divContext.style.display == "none") 
-	     {
-	       this.style.backgroundColor="#fff";
-	     }
-	    }  
-	    }';
-	    } else
-	    {
-	    $renderer->doc .= '
-
-	    var hover_tr = document.getElementsByClassName("tr_hover");
-
-	    for(i=0;i<hover_tr.length;i++)
-	    {
-	    hover_tr[i].onmousemove = function() {
-	    this.style.backgroundColor="#EFF3F6"; 
-	    }   
-	    hover_tr[i].onmouseout = function() {
-	    this.style.backgroundColor="#fff";
-	    }  
-	    }';
-	    }
 	    $renderer->doc .= '}
 	    </script>
 	    ';
-	    $bazy_dir = '/home/hafron/public_html/doku/data/pages/playground/bazy';
+	    } 
 	    $baza = $bazy_dir.'/'.$NAZWA_BAZY.'.txt';
 	    $rozdzielacz = '\\';
 	    $rozdzielacz_encja = '&#92;';
 
 
 
-	    if(isset($grupy) && in_array('user', $grupy)):
-	    if(isset($_POST['dodaj']))
+	    if(isset($grupy) && in_array('user', $grupy))
 	    {
-	    $max_id = 0;
-	    if(!file_exists($baza)) {
-	    $handle = fopen($baza, 'w+');
-	    fclose($handle);
-	    } else
-	    {
-	    $handle = fopen($baza, 'r');
-	    }
-	    if ($handle) {
-	    while (($bufor = fgets($handle)) !== false) {
-		$dane = explode($rozdzielacz, $bufor);
-		if($max_id < (int)$dane[0])
+		if(isset($_POST['dodaj']))
 		{
-		  $max_id = (int)$dane[0];
-		}
-	    }
-	    if (!feof($handle)) {
-	       $renderer->doc .= "Błąd: niespodziewany błąd przy odczycie pliku.";
-	    }
-	    fclose($handle);
-	    } else
-	    {
-	    die("Nie udało się otworzyć bazy danych.");
-	    }
-	    $lines = file($baza);
-	    if($lines) 
-	    $max_id++;
-	    else
-	    $max_id=1;
-
-	    $line .= $max_id.$rozdzielacz;
-	    $handle = fopen($baza, 'w+');
-	    if (!$handle) {
-	    $renderer->doc .="Nie udało się otworzyć bazy danych.";
-	    } else
-	    {
-	    foreach($NAGLOWKI as $v)
-	    {  
-	       $value = str_replace($rozdzielacz, $rozdzielacz_encja, str_replace("\n", "<br>", trim($_POST[$v])));
-	       $line .= $value.$rozdzielacz;
-	    }
-	    $line = substr($line, 0, -1);
-	    $line .= "\n";
-	    array_unshift($lines, $line);
-	    foreach ($lines as $file_line) { fwrite( $handle, "$file_line"); }
-	    fclose($handle);
-	    }
-
-	    } elseif(isset($_GET['usun']))
-	    {
-	    $id = $_GET['usun'];
-	    $lines = file($baza);
-	    if($lines) 
-	    {
-	    $handle = fopen($baza, 'w+');
-	    if (!$handle) {
-	      $renderer->doc .="Nie udało się otworzyć bazy danych.";
-	    } else
-	    {
-	      foreach ($lines as $file_line) { 
-		$dane = explode($rozdzielacz, $file_line);
-		if($dane[0] != $id)
-		{
-		  fwrite( $handle, "$file_line");
-		}
-	      }
-	      fclose($handle);
-	    }
-	    } else
-	    {
-	      $renderer->doc .="Nie udało się otworzyć bazy danych.";
-	    }
-
-	    } elseif(isset($_POST['popraw']))
-	    {
-
-
-	    $id = $_POST['popraw'];
-	    $lines = file($baza);
-	    if($lines) 
-	    {
-	    $line .= $id.$rozdzielacz;
-	    foreach($NAGLOWKI as $v)
-	    {  
-	       $value = str_replace($rozdzielacz, $rozdzielacz_encja, str_replace("\n", "<br>", trim($_POST[$v])));
-	       $line .= $value.$rozdzielacz;
-	    }
-	    $line = substr($line, 0, -1);
-	    $line .= "\n";
-
-	    $handle = fopen($baza, 'w+');
-	    if (!$handle) {
-	      $renderer->doc .="Nie udało się otworzyć bazy danych.";
-	    } else
-	    {
-	      foreach ($lines as $file_line) { 
-		$dane = explode($rozdzielacz, $file_line);
-		if($dane[0] != $id)
-		{
-		  fwrite( $handle, "$file_line");
+		$max_id = 0;
+		if(!file_exists($baza)) {
+		$handle = fopen($baza, 'w+');
+		fclose($handle);
 		} else
 		{
-		  fwrite($handle, "$line");
+		$handle = fopen($baza, 'r');
 		}
-	      }
-	      fclose($handle);
-	    }
-	    } else
-	    {
-	      $renderer->doc .="Nie udało się otworzyć bazy danych.";
-	    }
-	    }
-	    endif;
+		if ($handle) {
+		while (($bufor = fgets($handle)) !== false) {
+		    $dane = explode($rozdzielacz, $bufor);
+		    if($max_id < (int)$dane[0])
+		    {
+		      $max_id = (int)$dane[0];
+		    }
+		}
+		if (!feof($handle)) {
+		   $renderer->doc .= "Błąd: niespodziewany błąd przy odczycie pliku.";
+		}
+		fclose($handle);
+		} else
+		{
+		die("Nie udało się otworzyć bazy danych.");
+		}
+		$lines = file($baza);
+		if($lines) 
+		$max_id++;
+		else
+		$max_id=1;
+
+		$line .= $max_id.$rozdzielacz;
+		$handle = fopen($baza, 'w+');
+		if (!$handle) {
+		$renderer->doc .="Nie udało się otworzyć bazy danych.";
+		} else
+		{
+		foreach($NAGLOWKI as $v)
+		{  
+		   $value = str_replace($rozdzielacz, $rozdzielacz_encja, str_replace("\n", "<br>", trim($_POST[$v])));
+		   $line .= $value.$rozdzielacz;
+		}
+		$line = substr($line, 0, -1);
+		$line .= "\n";
+		array_unshift($lines, $line);
+		foreach ($lines as $file_line) { fwrite( $handle, "$file_line"); }
+		fclose($handle);
+		}
+
+		} elseif(isset($_GET['usun']))
+		{
+		$id = $_GET['usun'];
+		$lines = file($baza);
+		if($lines) 
+		{
+		$handle = fopen($baza, 'w+');
+		if (!$handle) {
+		  $renderer->doc .="Nie udało się otworzyć bazy danych.";
+		} else
+		{
+		  foreach ($lines as $file_line) { 
+		    $dane = explode($rozdzielacz, $file_line);
+		    if($dane[0] != $id)
+		    {
+		      fwrite( $handle, "$file_line");
+		    }
+		  }
+		  fclose($handle);
+		}
+		} else
+		{
+		  $renderer->doc .="Nie udało się otworzyć bazy danych.";
+		}
+
+		} elseif(isset($_POST['popraw']))
+		{
 
 
+		$id = $_POST['popraw'];
+		$lines = file($baza);
+		if($lines) 
+		{
+		$line .= $id.$rozdzielacz;
+		foreach($NAGLOWKI as $v)
+		{  
+		   $value = str_replace($rozdzielacz, $rozdzielacz_encja, str_replace("\n", "<br>", trim($_POST[$v])));
+		   $line .= $value.$rozdzielacz;
+		}
+		$line = substr($line, 0, -1);
+		$line .= "\n";
+
+		$handle = fopen($baza, 'w+');
+		if (!$handle) {
+		  $renderer->doc .="Nie udało się otworzyć bazy danych.";
+		} else
+		{
+		  foreach ($lines as $file_line) { 
+		    $dane = explode($rozdzielacz, $file_line);
+		    if($dane[0] != $id)
+		    {
+		      fwrite( $handle, "$file_line");
+		    } else
+		    {
+		      fwrite($handle, "$line");
+		    }
+		  }
+		  fclose($handle);
+		}
+		} else
+		{
+		  $renderer->doc .= "Nie udało się otworzyć bazy danych.";
+		}
+		}
+	    }
 	    if(!file_exists($bazy_dir))
 	    {
-	    mkdir($bazy_dir);
+	    	mkdir($bazy_dir);
 	    }
+	    //creata base
+	    if(!file_exists($baza)) {
+	        $handle = fopen($baza, 'w+');
+	        fclose($handle);
+	    } 
 
 
 
@@ -474,31 +467,26 @@ class syntax_plugin_dtable extends DokuWiki_Syntax_Plugin {
 	    $renderer->doc .= '</tr>';
 	    if(!isset($_GET['edytuj']))
 	    {
-	    $renderer->doc .= '<tr id="aform" style="';
-	    if(count(file($baza)) != 0)
-	    $renderer->doc .='display:none;';
-	    $renderer->doc .= '">';
-	    $renderer->doc .= '<input type="hidden" value="" name="dodaj">';
-	    foreach($NAGLOWKI as $v)
-	    {
-	      if(in_array($v, $KOLUMNY_Z_PLIKAMI))
-		$renderer->doc .= '<td><span id="aFileName"></span><input type="text" name="'.$v.'" id="wiki__text"><a href="#" id="wstaw_plik">wstaw     plik</a></td>';
-		  elseif(in_array($v, $KOLUMNY_Z_DATAMI))
-		    $renderer->doc .= '<td><input type="date" name="'.$v.'" /></td>';
-		  else
-		    $renderer->doc .= '<td><textarea name="'.$v.'"></textarea></td>';
+		$renderer->doc .= '<tr id="aform" style="';
+		if(count(file($baza)) != 0)
+		$renderer->doc .='display:none;';
+		$renderer->doc .= '">';
+		$renderer->doc .= '<input type="hidden" value="" name="dodaj">';
+		foreach($NAGLOWKI as $v)
+		{
+		  if(in_array($v, $KOLUMNY_Z_PLIKAMI))
+		    $renderer->doc .= '<td><span id="aFileName"></span><input type="text" name="'.$v.'" id="wiki__text"><a href="#" id="wstaw_plik">wstaw     plik</a></td>';
+		      elseif(in_array($v, $KOLUMNY_Z_DATAMI))
+			$renderer->doc .= '<td><input type="date" name="'.$v.'" /></td>';
+		      else
+			$renderer->doc .= '<td><textarea name="'.$v.'"></textarea></td>';
 		}
-		//$renderer->doc .= '<td><input type="submit" value="Dodaj"></td>';
+		if($BUTTONS == '1')
+			$renderer->doc .= '<td><input type="submit" value="Dodaj"></td>';
 
 		$renderer->doc .= '</tr>';
-	    }
-	      if(!file_exists($baza)) {
-	       $handle = fopen($baza, 'w+');
-	       fclose($handle);
-	       } else
-	      {
+	    } 
 		$handle = fopen($baza, 'r');
-	      }
 	      
 	    if ($handle) {
 		while (($bufor = fgets($handle)) !== false) {
@@ -519,7 +507,9 @@ class syntax_plugin_dtable extends DokuWiki_Syntax_Plugin {
 			    $renderer->doc .= '<td><textarea name="'.$v.'">'.str_replace("<br>", "\n", $dane[$i]).'</textarea></td>';
 			  $i++;
 			}
-			//$renderer->doc .= '<td><input type="submit" value="Popraw"></td>';
+
+			if($BUTTONS == '1')
+			    $renderer->doc .= '<td><input type="submit" value="Popraw"></td>';
 
 			$renderer->doc .= '</tr>';
 		    } else
