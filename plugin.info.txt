@@ -1,7 +1,7 @@
-base now
-author me
-email me@someplace.com
-date 2005-07-28
-name Now Plugin
-desc Include the current date and time
-url http://www.dokuwiki.org/devel:syntax_plugins
+base dtable
+author Szymon Olewniczak
+email szymon.olewniczak@rid.pl
+date 2012-05-09
+name DTable
+desc Add to your page dynamic table which you can manage by simple GUI
+url http://www.dokuwiki.org/plugin:dtable

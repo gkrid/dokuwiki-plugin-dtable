@@ -19,12 +19,12 @@ require_once DOKU_PLUGIN.'syntax.php';
 class syntax_plugin_dtable extends DokuWiki_Syntax_Plugin {
 
     function getInfo() {
-        return array('author' => 'me',
-                     'email'  => 'me@someplace.com',
-                     'date'   => '2005-07-28',
-                     'name'   => 'Now Plugin',
-                     'desc'   => 'Include the current date and time',
-                     'url'    => 'http://www.dokuwiki.org/devel:syntax_plugins');
+        return array('author' => 'Szymon Olewniczak',
+                     'email'  => 'szymon.olewniczak@rid.pl',
+                     'date'   => '2012-05-09',
+                     'name'   => 'DTable Plugin',
+                     'desc'   => 'Add to your page dynamic table which you can manage by simple GUI',
+                     'url'    => 'http://www.dokuwiki.org/plugin:dtable');
     }
     function getPType(){
        return 'block';
@@ -55,10 +55,9 @@ class syntax_plugin_dtable extends DokuWiki_Syntax_Plugin {
     function render($mode, &$renderer, $data) {
         if($mode == 'xhtml'){
 
-	$renderer->doc .= var_export($_POST, true);
 	    $bazy_dir = $this->getConf('bases_dir');
-	    $tr_hover_color = $this->getConf('tr_hover_backgroundcolor');;
-	    $BUTTONS = '1';
+	    $tr_hover_color = $this->getConf('tr_hover_backgroundcolor');
+	    $BUTTONS = $this->getConf('buttons');
 
 	    $NAZWA_BAZY = $data['file'];
 	    $NAGLOWKI = $data['fileds']['all'];
@@ -68,25 +67,40 @@ class syntax_plugin_dtable extends DokuWiki_Syntax_Plugin {
 	    $renderer->doc .= '
 		    <div id="divContext" style="border: 1px solid #8CACBB; display: none; position: fixed">
 			    <ul class="cmenu" style="margin: 0; padding: 0.3em; list-style: none !important; background-color: white;">
-				    <li><a id="aDodaj" href="#">dodaj</a></li>
+				    <li><a id="aDodaj" href="#">'.$this->getLang('add').'</a></li>
 				<hr style="border: 0; border-bottom: 1px solid #8CACBB; margin: 3px 0px 3px 0px; width: 10em;" />
-				<li><a id="aEdytuj" href="#">edytuj</a></li>
-				<li><a id="aUsun" href="#">usuń</a></li>
+				<li><a id="aEdytuj" href="#">'.$this->getLang('edit').'</a></li>
+				<li><a id="aUsun" href="#">'.$this->getLang('remove').'</a></li>
 			</ul>
 		</div>
 	    ';
-
-	    function selfURL($get_to_remove='') {
-	    $s = empty($_SERVER["HTTPS"]) ? '' : ($_SERVER["HTTPS"] == "on") ? "s" : "";
-	    $protocol = strleft(strtolower($_SERVER["SERVER_PROTOCOL"]), "/").$s;
-	    $port = ($_SERVER["SERVER_PORT"] == "80") ? "" : (":".$_SERVER["SERVER_PORT"]);
-	    if($get_to_remove == '')
-	    return $protocol."://".$_SERVER['SERVER_NAME'].$port.$_SERVER['REQUEST_URI'];
-	    else
-	    return $protocol."://".$_SERVER['SERVER_NAME'].$port.preg_replace('/&'.$get_to_remove.'=[^&]*/', '', $_SERVER['REQUEST_URI']);
+	    if(!function_exists('selfURL'))
+	    {
+		function selfURL($get_to_remove='') {
+		    $s = empty($_SERVER["HTTPS"]) ? '' : ($_SERVER["HTTPS"] == "on") ? "s" : "";
+		    $protocol = strleft(strtolower($_SERVER["SERVER_PROTOCOL"]), "/").$s;
+		    $port = ($_SERVER["SERVER_PORT"] == "80") ? "" : (":".$_SERVER["SERVER_PORT"]);
+		    if($get_to_remove == '')
+		    return $protocol."://".$_SERVER['SERVER_NAME'].$port.$_SERVER['REQUEST_URI'];
+		    else
+		    return $protocol."://".$_SERVER['SERVER_NAME'].$port.preg_replace('/&'.$get_to_remove.'=[^&]*/', '', $_SERVER['REQUEST_URI']);
+		}
 	    }
-	    function strleft($s1, $s2) {
-	    return substr($s1, 0, strpos($s1, $s2));
+	    if(!function_exists('wiki_url'))
+	    {
+		function wiki_url()
+		{
+		    $self = selfURL();
+		    $ex = explode('/', $self);
+		    array_pop($ex);
+		    return implode('/', $ex);
+		}
+	    }
+	    if(!function_exists('strleft'))
+	    {
+		function strleft($s1, $s2) {
+		    return substr($s1, 0, strpos($s1, $s2));
+		}
 	    }
 
 
@@ -107,7 +121,7 @@ class syntax_plugin_dtable extends DokuWiki_Syntax_Plugin {
 
 	    add_file.onclick = function()
 	    {
-	    window.open("http://wiki.rid.pl/lib/exe/mediamanager.php?ns='.$id_of_page[0].'&edid=wiki__text", "pliki","width=800,height=600");
+	    window.open("'.wiki_url().'/lib/exe/mediamanager.php?ns='.$id_of_page[0].'&edid=wiki__text", "pliki","width=800,height=600");
 	    }
 
 	    // comes from prototype.js; this is simply easier on the eyes and fingers
@@ -191,7 +205,8 @@ class syntax_plugin_dtable extends DokuWiki_Syntax_Plugin {
 	    add_events(textarea_elm);';
 	    }
 
-	    $renderer->doc .= ' var _replaceContext = false;		// replace the system context menu?
+	    $renderer->doc .= '
+	    var _replaceContext = false;		// replace the system context menu?
 	    var _mouseOverContext = false;		// is the mouse over the context menu?
 	    var _divContext = id("divContext");	// makes my life easier
 
@@ -329,53 +344,51 @@ class syntax_plugin_dtable extends DokuWiki_Syntax_Plugin {
 	    {
 		if(isset($_POST['dodaj']))
 		{
-		$max_id = 0;
-		if(!file_exists($baza)) {
-		$handle = fopen($baza, 'w+');
-		fclose($handle);
-		} else
-		{
-		$handle = fopen($baza, 'r');
-		}
-		if ($handle) {
-		while (($bufor = fgets($handle)) !== false) {
-		    $dane = explode($rozdzielacz, $bufor);
-		    if($max_id < (int)$dane[0])
-		    {
-		      $max_id = (int)$dane[0];
-		    }
+		    $max_id = 0;
+		    $handle = fopen($baza, 'r');
+		    if ($handle) {
+		    while (($bufor = fgets($handle)) !== false) {
+			$dane = explode($rozdzielacz, $bufor);
+			if($max_id < (int)$dane[0])
+			{
+			  $max_id = (int)$dane[0];
+			}
 		}
 		if (!feof($handle)) {
-		   $renderer->doc .= "Błąd: niespodziewany błąd przy odczycie pliku.";
+		   $renderer->doc .= $this->getLang('db_error');
 		}
 		fclose($handle);
 		} else
 		{
-		die("Nie udało się otworzyć bazy danych.");
+		    $renderer->doc .= $this->getLang('db_error');
 		}
 		$lines = file($baza);
 		if($lines) 
-		$max_id++;
+		    $max_id++;
 		else
-		$max_id=1;
+		    $max_id=1;
 
 		$line .= $max_id.$rozdzielacz;
 		$handle = fopen($baza, 'w+');
 		if (!$handle) {
-		$renderer->doc .="Nie udało się otworzyć bazy danych.";
+		    $renderer->doc .= $this->getLang('db_error');
 		} else
 		{
-		foreach($NAGLOWKI as $v)
-		{  
-		   $value = str_replace($rozdzielacz, $rozdzielacz_encja, str_replace("\n", "<br>", trim($_POST[$v])));
-		   $line .= $value.$rozdzielacz;
-		}
-		$line = substr($line, 0, -1);
-		$line .= "\n";
-		array_unshift($lines, $line);
-		foreach ($lines as $file_line) { fwrite( $handle, "$file_line"); }
-		fclose($handle);
-		}
+		    foreach($NAGLOWKI as $v)
+		    {  
+			$value = str_replace($rozdzielacz, 
+				   	     $rozdzielacz_encja,
+					     str_replace("\n", "<br>", trim($_POST[md5($v)]))
+					    );
+
+		       $line .= $value.$rozdzielacz;
+		    }
+		    $line = substr($line, 0, -1);
+		    $line .= "\n";
+		    array_unshift($lines, $line);
+		    foreach ($lines as $file_line) { fwrite( $handle, "$file_line"); }
+		    fclose($handle);
+		    }
 
 		} elseif(isset($_GET['usun']))
 		{
@@ -385,7 +398,7 @@ class syntax_plugin_dtable extends DokuWiki_Syntax_Plugin {
 		{
 		$handle = fopen($baza, 'w+');
 		if (!$handle) {
-		  $renderer->doc .="Nie udało się otworzyć bazy danych.";
+		  $renderer->doc .= $this->getLang('db_error');
 		} else
 		{
 		  foreach ($lines as $file_line) { 
@@ -399,21 +412,21 @@ class syntax_plugin_dtable extends DokuWiki_Syntax_Plugin {
 		}
 		} else
 		{
-		  $renderer->doc .="Nie udało się otworzyć bazy danych.";
+		  $renderer->doc .= $this->getLang('db_error');
 		}
 
 		} elseif(isset($_POST['popraw']))
 		{
 
 
-		$id = $_POST['popraw'];
+		$id = (int)$_POST['popraw'];
 		$lines = file($baza);
 		if($lines) 
 		{
 		$line .= $id.$rozdzielacz;
 		foreach($NAGLOWKI as $v)
 		{  
-		   $value = str_replace($rozdzielacz, $rozdzielacz_encja, str_replace("\n", "<br>", trim($_POST[$v])));
+		   $value = str_replace($rozdzielacz, $rozdzielacz_encja, str_replace("\n", "<br>", trim($_POST[md5($v)])));
 		   $line .= $value.$rozdzielacz;
 		}
 		$line = substr($line, 0, -1);
@@ -421,7 +434,7 @@ class syntax_plugin_dtable extends DokuWiki_Syntax_Plugin {
 
 		$handle = fopen($baza, 'w+');
 		if (!$handle) {
-		  $renderer->doc .="Nie udało się otworzyć bazy danych.";
+		  $renderer->doc .= $this->getLang('db_error');
 		} else
 		{
 		  foreach ($lines as $file_line) { 
@@ -438,7 +451,7 @@ class syntax_plugin_dtable extends DokuWiki_Syntax_Plugin {
 		}
 		} else
 		{
-		  $renderer->doc .= "Nie udało się otworzyć bazy danych.";
+		  $renderer->doc .= $this->getLang('db_error');
 		}
 		}
 	    }
@@ -454,8 +467,8 @@ class syntax_plugin_dtable extends DokuWiki_Syntax_Plugin {
 
 
 
-	    if(!isset($_GET['edytuj']))
-		$renderer->doc .= '<form action="'.selfURL().'" method="post"><form action="'.selfURL().'" method="post">';
+	    if(!isset($_GET['edytuj']) && isset($grupy) && in_array('user', $grupy))
+		$renderer->doc .= '<form action="'.selfURL().'" method="post">';
 	    else
 		$renderer->doc .= '<form action="'.selfURL('edytuj').'" method="post">';
 
@@ -465,7 +478,8 @@ class syntax_plugin_dtable extends DokuWiki_Syntax_Plugin {
 	      $renderer->doc .= "<th>$v</th>";
 	    }
 	    $renderer->doc .= '</tr>';
-	    if(!isset($_GET['edytuj']))
+
+	    if(!isset($_GET['edytuj']) && isset($grupy) && in_array('user', $grupy))
 	    {
 		$renderer->doc .= '<tr id="aform" style="';
 		if(count(file($baza)) != 0)
@@ -475,14 +489,14 @@ class syntax_plugin_dtable extends DokuWiki_Syntax_Plugin {
 		foreach($NAGLOWKI as $v)
 		{
 		  if(in_array($v, $KOLUMNY_Z_PLIKAMI))
-		    $renderer->doc .= '<td><span id="aFileName"></span><input type="text" name="'.$v.'" id="wiki__text"><a href="#" id="wstaw_plik">wstaw     plik</a></td>';
+		    $renderer->doc .= '<td><span id="aFileName"></span><input type="text" name="'.md5($v).'" id="wiki__text"><a href="#" id="wstaw_plik">'.$this->getLang('upload_file').'</a></td>';
 		      elseif(in_array($v, $KOLUMNY_Z_DATAMI))
-			$renderer->doc .= '<td><input type="date" name="'.$v.'" /></td>';
+			$renderer->doc .= '<td><input type="date" name="'.md5($v).'" /></td>';
 		      else
-			$renderer->doc .= '<td><textarea name="'.$v.'"></textarea></td>';
+			$renderer->doc .= '<td><textarea name="'.md5($v).'"></textarea></td>';
 		}
 		if($BUTTONS == '1')
-			$renderer->doc .= '<td><input type="submit" value="Dodaj"></td>';
+			$renderer->doc .= '<td><input type="submit" value="'.$this->getLang('add').'"></td>';
 
 		$renderer->doc .= '</tr>';
 	    } 
@@ -500,16 +514,16 @@ class syntax_plugin_dtable extends DokuWiki_Syntax_Plugin {
 			{
 
 			  if(in_array($v, $KOLUMNY_Z_PLIKAMI))
-			    $renderer->doc .= '<td><span id="aFileName"></span><input type="text" name="'.$v.'" id="wiki__text" value="'.$dane[$i].'"><a href="#" id="wstaw_plik">wstaw     plik</a></td>';
+			    $renderer->doc .= '<td><span id="aFileName"></span><input type="text" name="'.md5($v).'" id="wiki__text" value="'.$dane[$i].'"><a href="#" id="wstaw_plik">wstaw     plik</a></td>';
 			 elseif(in_array($v, $KOLUMNY_Z_DATAMI))
-			    $renderer->doc .= '<td><input type="date" name="'.$v.'" value="'.$dane[$i].'"></td>';
+			    $renderer->doc .= '<td><input type="date" name="'.md5($v).'" value="'.$dane[$i].'"></td>';
 			  else
-			    $renderer->doc .= '<td><textarea name="'.$v.'">'.str_replace("<br>", "\n", $dane[$i]).'</textarea></td>';
+			    $renderer->doc .= '<td><textarea name="'.md5($v).'">'.str_replace("<br>", "\n", $dane[$i]).'</textarea></td>';
 			  $i++;
 			}
 
 			if($BUTTONS == '1')
-			    $renderer->doc .= '<td><input type="submit" value="Popraw"></td>';
+			    $renderer->doc .= '<td><input type="submit" value="'.$this->getLang('correct').'"></td>';
 
 			$renderer->doc .= '</tr>';
 		    } else
@@ -529,12 +543,12 @@ class syntax_plugin_dtable extends DokuWiki_Syntax_Plugin {
 		    }
 		}
 		if (!feof($handle)) {
-		   $renderer->doc .= "Błąd: niespodziewany błąd przy odczycie pliku.";
+		   $renderer->doc .= $this->getLang('db_error');
 		}
 		fclose($handle);
 	    } else
 	    {
-	      $renderer->doc .= "Nie udało się otworzyć bazy danych.";
+	      $renderer->doc .= $this->getLang('db_error');
 	    }
 
 	    $renderer->doc .= '</table>';
