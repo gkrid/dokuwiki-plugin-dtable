@@ -119,7 +119,7 @@ class syntax_plugin_dtable extends DokuWiki_Syntax_Plugin {
 	    var add_file = document.getElementById("wstaw_plik");
 	    var tr_color = "#fff";
 
-	    if(add_file == null)
+	    if(add_file != null)
 	    {
 		add_file.onclick = function()
 		{
