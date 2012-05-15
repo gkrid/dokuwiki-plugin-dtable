@@ -119,9 +119,12 @@ class syntax_plugin_dtable extends DokuWiki_Syntax_Plugin {
 	    var add_file = document.getElementById("wstaw_plik");
 	    var tr_color = "#fff";
 
-	    add_file.onclick = function()
+	    if(add_file == null)
 	    {
-	    window.open("'.wiki_url().'/lib/exe/mediamanager.php?ns='.$id_of_page[0].'&edid=wiki__text", "pliki","width=800,height=600");
+		add_file.onclick = function()
+		{
+		window.open("'.wiki_url().'/lib/exe/mediamanager.php?ns='.$id_of_page[0].'&edid=wiki__text", "pliki","width=800,height=600");
+		}
 	    }
 
 	    // comes from prototype.js; this is simply easier on the eyes and fingers
@@ -488,9 +491,9 @@ class syntax_plugin_dtable extends DokuWiki_Syntax_Plugin {
 		$renderer->doc .= '<input type="hidden" value="" name="dodaj">';
 		foreach($NAGLOWKI as $v)
 		{
-		  if(in_array($v, $KOLUMNY_Z_PLIKAMI))
+		  if(is_array($KOLUMNY_Z_PLIKAMI) && in_array($v, $KOLUMNY_Z_PLIKAMI))
 		    $renderer->doc .= '<td><span id="aFileName"></span><input type="text" name="'.md5($v).'" id="wiki__text"><a href="#" id="wstaw_plik">'.$this->getLang('upload_file').'</a></td>';
-		      elseif(in_array($v, $KOLUMNY_Z_DATAMI))
+		      elseif(is_array($KOLUMNY_Z_DATAMI) && in_array($v, $KOLUMNY_Z_DATAMI))
 			$renderer->doc .= '<td><input type="date" name="'.md5($v).'" /></td>';
 		      else
 			$renderer->doc .= '<td><textarea name="'.md5($v).'"></textarea></td>';
