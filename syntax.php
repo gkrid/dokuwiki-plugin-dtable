@@ -503,6 +503,7 @@ class syntax_plugin_dtable extends DokuWiki_Syntax_Plugin {
 
 		$renderer->doc .= '</tr>';
 	    } 
+	    	$CON_TO_PRA = '<html>';//content to dokuwkiki parser
 		$handle = fopen($baza, 'r');
 	      
 	    if ($handle) {
@@ -510,51 +511,52 @@ class syntax_plugin_dtable extends DokuWiki_Syntax_Plugin {
 		    $dane = explode($rozdzielacz, $bufor);
 		    if(isset($_GET['edytuj']) && (int)$_GET['edytuj'] ==  $dane[0])
 		    {
-			$renderer->doc .= '<tr id="'.$dane[0].'">';
-			$renderer->doc .= '<input type="hidden" value="'.$_GET['edytuj'].'" name="popraw">';
+			$CON_TO_PRA .= '<tr id="'.$dane[0].'">';
+			$CON_TO_PRA .= '<input type="hidden" value="'.$_GET['edytuj'].'" name="popraw">';
 			$i=1;
 			foreach($NAGLOWKI as $v)
 			{
 
-			  if(in_array($v, $KOLUMNY_Z_PLIKAMI))
-			    $renderer->doc .= '<td><span id="aFileName"></span><input type="text" name="'.md5($v).'" id="wiki__text" value="'.$dane[$i].'"><a href="#" id="wstaw_plik">wstaw     plik</a></td>';
-			 elseif(in_array($v, $KOLUMNY_Z_DATAMI))
-			    $renderer->doc .= '<td><input type="date" name="'.md5($v).'" value="'.$dane[$i].'"></td>';
+			  if(is_array($KOLUMNY_Z_PLIKAMI) && in_array($v, $KOLUMNY_Z_PLIKAMI))
+			    $CON_TO_PRA .= '<td><span id="aFileName"></span><input type="text" name="'.md5($v).'" id="wiki__text" value="'.$dane[$i].'"><a href="#" id="wstaw_plik">wstaw     plik</a></td>';
+			 elseif(is_array($KOLUMNY_Z_DATAMI) && in_array($v, $KOLUMNY_Z_DATAMI))
+			    $CON_TO_PRA .= '<td><input type="date" name="'.md5($v).'" value="'.$dane[$i].'"></td>';
 			  else
-			    $renderer->doc .= '<td><textarea name="'.md5($v).'">'.str_replace("<br>", "\n", $dane[$i]).'</textarea></td>';
+			    $CON_TO_PRA .= '<td><textarea name="'.md5($v).'">'.str_replace("<br>", "\n", $dane[$i]).'</textarea></td>';
 			  $i++;
 			}
 
 			if($BUTTONS == '1')
-			    $renderer->doc .= '<td><input type="submit" value="'.$this->getLang('correct').'"></td>';
+			    $CON_TO_PRA .= '<td><input type="submit" value="'.$this->getLang('correct').'"></td>';
 
-			$renderer->doc .= '</tr>';
+			$CON_TO_PRA .= '</tr>';
 		    } else
 		    {
-			$renderer->doc .= '<tr id="'.$dane[0].'" class="tr_hover">';
+			$CON_TO_PRA .= '<tr id="'.$dane[0].'" class="tr_hover"></html>';
 			for($i=1;$i<sizeof($dane);$i++)
 			{
-			    $info = array();
-			    $renderer->doc .= '<td class="con_menu">'.p_render('xhtml',p_get_instructions($dane[$i]),$info).'</td>';
+			    $CON_TO_PRA .= '<html><td class="con_menu"></html>'.$dane[$i].'<html></td></html>';
 			}
 			for($i=0;$i<sizeof($NAGLOWKI)-sizeof($dane)+1;$i++)
 			{
-			   $renderer->doc .= '<td class="con_menu"></td>';
+			   $CON_TO_PRA .= '<html><td class="con_menu"></td></html>';
 			}
-			// $renderer->doc .= '<td><a href="'.selfURL().'&usun='.$dane[0].'">usuń</a></td>';
-			$renderer->doc .= '</tr>';
+			// $CON_TO_PRA .= '<td><a href="'.selfURL().'&usun='.$dane[0].'">usuń</a></td>';
+			$CON_TO_PRA .= '<html></tr>';
 		    }
 		}
 		if (!feof($handle)) {
-		   $renderer->doc .= $this->getLang('db_error');
+		   //$CON_TO_PRA .= $this->getLang('db_error');
 		}
 		fclose($handle);
 	    } else
 	    {
-	      $renderer->doc .= $this->getLang('db_error');
+	      //$CON_TO_PRA .= $this->getLang('db_error');
 	    }
 
-	    $renderer->doc .= '</table>';
+	    $CON_TO_PRA .= '</table></html>';
+	    $info = array();
+	    $renderer->doc .= p_render('xhtml',p_get_instructions($CON_TO_PRA),$info);
 	    $renderer->doc .= '</form>';
 
             return true;
