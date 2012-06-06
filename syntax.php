@@ -21,7 +21,7 @@ class syntax_plugin_dtable extends DokuWiki_Syntax_Plugin {
     function getInfo() {
         return array('author' => 'Szymon Olewniczak',
                      'email'  => 'szymon.olewniczak@rid.pl',
-                     'date'   => '2012-05-09',
+                     'date'   => '2012-06-06',
                      'name'   => 'DTable Plugin',
                      'desc'   => 'Add to your page dynamic table which you can manage by simple GUI',
                      'url'    => 'http://www.dokuwiki.org/plugin:dtable');
@@ -58,12 +58,14 @@ class syntax_plugin_dtable extends DokuWiki_Syntax_Plugin {
 	    $bazy_dir = $this->getConf('bases_dir');
 	    $tr_hover_color = $this->getConf('tr_hover_backgroundcolor');
 	    $BUTTONS = $this->getConf('buttons');
+	    $MAX_TABLE_WIDTH = $this->getConf('max_table_width');
 
 	    $NAZWA_BAZY = $data['file'];
 	    $NAGLOWKI = $data['fileds']['all'];
 	    $KOLUMNY_Z_PLIKAMI = $data['fileds']['file'];
 	    $KOLUMNY_Z_DATAMI = $data['fileds']['date'];
-
+	    $SUBMIT_WIDTH = 50;
+	    $INPUT_WIDTH = floor(($MAX_TABLE_WIDTH-$SUBMIT_WIDTH)/count($NAGLOWKI))-5;//border około 5px;
 	    $renderer->doc .= '
 		    <div id="divContext" style="border: 1px solid #8CACBB; display: none; position: fixed">
 			    <ul class="cmenu" style="margin: 0; padding: 0.3em; list-style: none !important; background-color: white;">
@@ -114,7 +116,6 @@ class syntax_plugin_dtable extends DokuWiki_Syntax_Plugin {
 	    <script type="text/javascript">
 	    window.onload = function()
 	    {';
-
 	    $renderer->doc .='
 	    var add_file = document.getElementById("wstaw_plik");
 	    var tr_color = "#fff";
@@ -130,7 +131,7 @@ class syntax_plugin_dtable extends DokuWiki_Syntax_Plugin {
 	    // comes from prototype.js; this is simply easier on the eyes and fingers
 	    function id(id)
 	    {
-	    return document.getElementById(id);
+		return document.getElementById(id);
 	    }
 	    function clear_tr_hover()
 	    {
@@ -330,6 +331,7 @@ class syntax_plugin_dtable extends DokuWiki_Syntax_Plugin {
 			return false;
 		}
 	    }
+	    
 
 	    ';
 
@@ -475,7 +477,7 @@ class syntax_plugin_dtable extends DokuWiki_Syntax_Plugin {
 	    else
 		$renderer->doc .= '<form action="'.selfURL('edytuj').'" method="post">';
 
-	    $renderer->doc .= '<table class="inline"><tr>';
+	    $renderer->doc .= '<table class="inline" id="dtable"><tr>';
 	    foreach($NAGLOWKI as $v)
 	    {
 	      $renderer->doc .= "<th>$v</th>";
@@ -494,12 +496,12 @@ class syntax_plugin_dtable extends DokuWiki_Syntax_Plugin {
 		  if(is_array($KOLUMNY_Z_PLIKAMI) && in_array($v, $KOLUMNY_Z_PLIKAMI))
 		    $renderer->doc .= '<td><span id="aFileName"></span><input type="text" name="'.md5($v).'" id="wiki__text"><a href="#" id="wstaw_plik">'.$this->getLang('upload_file').'</a></td>';
 		      elseif(is_array($KOLUMNY_Z_DATAMI) && in_array($v, $KOLUMNY_Z_DATAMI))
-			$renderer->doc .= '<td><input type="date" name="'.md5($v).'" /></td>';
+			$renderer->doc .= '<td><input type="date" name="'.md5($v).'" style="width: '.$INPUT_WIDTH.'px" /></td>';
 		      else
-			$renderer->doc .= '<td><textarea name="'.md5($v).'"></textarea></td>';
+			$renderer->doc .= '<td><textarea name="'.md5($v).'" style="width: '.$INPUT_WIDTH.'px"></textarea></td>';
 		}
 		if($BUTTONS == '1')
-			$renderer->doc .= '<td><input type="submit" value="'.$this->getLang('add').'"></td>';
+			$renderer->doc .= '<td><input type="submit" style="width: '.$SUBMIT_WIDTH.'px" value="'.$this->getLang('add').'"></td>';
 
 		$renderer->doc .= '</tr>';
 	    } 
@@ -520,14 +522,14 @@ class syntax_plugin_dtable extends DokuWiki_Syntax_Plugin {
 			  if(is_array($KOLUMNY_Z_PLIKAMI) && in_array($v, $KOLUMNY_Z_PLIKAMI))
 			    $CON_TO_PRA .= '<td><span id="aFileName"></span><input type="text" name="'.md5($v).'" id="wiki__text" value="'.$dane[$i].'"><a href="#" id="wstaw_plik">wstaw     plik</a></td>';
 			 elseif(is_array($KOLUMNY_Z_DATAMI) && in_array($v, $KOLUMNY_Z_DATAMI))
-			    $CON_TO_PRA .= '<td><input type="date" name="'.md5($v).'" value="'.$dane[$i].'"></td>';
+			    $CON_TO_PRA .= '<td><input type="date" name="'.md5($v).'" value="'.$dane[$i].'" style="width: '.$INPUT_WIDTH.'px"></td>';
 			  else
-			    $CON_TO_PRA .= '<td><textarea name="'.md5($v).'">'.str_replace("<br>", "\n", $dane[$i]).'</textarea></td>';
+			    $CON_TO_PRA .= '<td><textarea name="'.md5($v).'" style="width: '.$INPUT_WIDTH.'px">'.str_replace("<br>", "\n", $dane[$i]).'</textarea></td>';
 			  $i++;
 			}
 
 			if($BUTTONS == '1')
-			    $CON_TO_PRA .= '<td><input type="submit" value="'.$this->getLang('correct').'"></td>';
+			    $CON_TO_PRA .= '<td><input type="submit" style="width: '.$SUBMIT_WIDTH.'px" value="'.$this->getLang('correct').'"></td>';
 
 			$CON_TO_PRA .= '</tr>';
 		    } else
