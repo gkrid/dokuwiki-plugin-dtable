@@ -64,7 +64,7 @@ class syntax_plugin_dtable extends DokuWiki_Syntax_Plugin {
 	    $NAGLOWKI = $data['fileds']['all'];
 	    $KOLUMNY_Z_PLIKAMI = $data['fileds']['file'];
 	    $KOLUMNY_Z_DATAMI = $data['fileds']['date'];
-	    $SUBMIT_WIDTH = 50;
+	    $SUBMIT_WIDTH = 60;
 	    $INPUT_WIDTH = floor(($MAX_TABLE_WIDTH-$SUBMIT_WIDTH)/count($NAGLOWKI))-5;//border około 5px;
 	    $renderer->doc .= '
 		    <div id="divContext" style="border: 1px solid #8CACBB; display: none; position: fixed">
