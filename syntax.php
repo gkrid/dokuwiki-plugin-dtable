@@ -110,7 +110,6 @@ class syntax_plugin_dtable extends DokuWiki_Syntax_Plugin {
 	    $user = $sesja['auth']['user'];
 
 	    $id_of_page = explode(':', $_GET['id']);
-	    echo auth_aclcheck($_GET['id'], $user, $grupy);
 
 	    if(isset($grupy) && auth_aclcheck($_GET['id'], $user, $grupy) >= 2) { 
 	    $renderer->doc .= '
