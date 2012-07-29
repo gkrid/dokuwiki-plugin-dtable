@@ -2,8 +2,8 @@
 /**
  * Plugin Now: Inserts a timestamp.
  * 
- * @license    GPL 2 (http://www.gnu.org/licenses/gpl.html)
- * @author     Christopher Smith <chris@jalakai.co.uk>
+ * @license    GPL 3 (http://www.gnu.org/licenses/gpl.html)
+ * @author     Szymon Olewniczak <szymon.olewniczak@rid.pl>
  */
 
 // must be run within DokuWiki
@@ -21,7 +21,7 @@ class syntax_plugin_dtable extends DokuWiki_Syntax_Plugin {
     function getInfo() {
         return array('author' => 'Szymon Olewniczak',
                      'email'  => 'szymon.olewniczak@rid.pl',
-                     'date'   => '2012-06-06',
+                     'date'   => '2012-07-29',
                      'name'   => 'DTable Plugin',
                      'desc'   => 'Add to your page dynamic table which you can manage by simple GUI',
                      'url'    => 'http://www.dokuwiki.org/plugin:dtable');
@@ -105,13 +105,14 @@ class syntax_plugin_dtable extends DokuWiki_Syntax_Plugin {
 		}
 	    }
 
-
 	    $sesja = reset($_SESSION);
 	    $grupy = $sesja['auth']['info']['grps'];
+	    $user = $sesja['auth']['user'];
 
 	    $id_of_page = explode(':', $_GET['id']);
+	    echo auth_aclcheck($_GET['id'], $user, $grupy);
 
-	    if(isset($grupy) && in_array('user', $grupy)) { 
+	    if(isset($grupy) && auth_aclcheck($_GET['id'], $user, $grupy) >= 2) { 
 	    $renderer->doc .= '
 	    <script type="text/javascript">
 	    window.onload = function()

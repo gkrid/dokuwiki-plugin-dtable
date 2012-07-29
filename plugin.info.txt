@@ -1,7 +1,7 @@
 base dtable
 author Szymon Olewniczak
 email szymon.olewniczak@rid.pl
-date 2012-06-06
+date 2012-07-29
 name DTable
 desc Add to your page dynamic table which you can manage by simple GUI
 url http://www.dokuwiki.org/plugin:dtable
