@@ -395,35 +395,8 @@ class syntax_plugin_dtable extends DokuWiki_Syntax_Plugin {
 		    fclose($handle);
 		    }
 
-		} elseif(isset($_GET['usun']))
-		{
-		$id = $_GET['usun'];
-		$lines = file($baza);
-		if($lines) 
-		{
-		$handle = fopen($baza, 'w+');
-		if (!$handle) {
-		  $renderer->doc .= $this->getLang('db_error');
-		} else
-		{
-		  foreach ($lines as $file_line) { 
-		    $dane = explode($rozdzielacz, $file_line);
-		    if($dane[0] != $id)
-		    {
-		      fwrite( $handle, "$file_line");
-		    }
-		  }
-		  fclose($handle);
-		}
-		} else
-		{
-		  $renderer->doc .= $this->getLang('db_error');
-		}
-
 		} elseif(isset($_POST['popraw']))
 		{
-
-
 		$id = (int)$_POST['popraw'];
 		$lines = file($baza);
 		if($lines) 
@@ -458,6 +431,31 @@ class syntax_plugin_dtable extends DokuWiki_Syntax_Plugin {
 		{
 		  $renderer->doc .= $this->getLang('db_error');
 		}
+		} elseif(isset($_GET['usun']))
+		{
+		$id = $_GET['usun'];
+		$lines = file($baza);
+		if($lines) 
+		{
+		$handle = fopen($baza, 'w+');
+		if (!$handle) {
+		  $renderer->doc .= $this->getLang('db_error');
+		} else
+		{
+		  foreach ($lines as $file_line) { 
+		    $dane = explode($rozdzielacz, $file_line);
+		    if($dane[0] != $id)
+		    {
+		      fwrite( $handle, "$file_line");
+		    }
+		  }
+		  fclose($handle);
+		}
+		} else
+		{
+		  $renderer->doc .= $this->getLang('db_error');
+		}
+
 		}
 	    }
 	    if(!file_exists($bazy_dir))
@@ -558,7 +556,7 @@ class syntax_plugin_dtable extends DokuWiki_Syntax_Plugin {
 
 	    $CON_TO_PRA .= '</table></html>';
 	    $info = array();
-	    $renderer->doc .= p_render('xhtml',p_get_instructions($CON_TO_PRA),$info);
+	    $renderer->doc .= p_render('xhtml',p_get_instructions(str_replace($rozdzielacz_encja, $rozdzielacz, $CON_TO_PRA)),$info);
 	    $renderer->doc .= '</form>';
 
             return true;
