@@ -110,235 +110,11 @@ class syntax_plugin_dtable extends DokuWiki_Syntax_Plugin {
 	    $user = $sesja['auth']['user'];
 
 	    $id_of_page = explode(':', $_GET['id']);
+	    $acl = 0;
 
-	    if(isset($grupy) && auth_aclcheck($_GET['id'], $user, $grupy) >= 2) { 
-	    $renderer->doc .= '
-	    <script type="text/javascript">
-	    window.onload = function()
-	    {';
-	    $renderer->doc .='
-	    var add_file = document.getElementById("wstaw_plik");
-	    var tr_color = "#fff";
+	    if(isset($grupy))
+	       $acl = auth_aclcheck($_GET['id'], $user, $grupy);
 
-	    if(add_file != null)
-	    {
-		add_file.onclick = function()
-		{
-		window.open("'.wiki_url().'/lib/exe/mediamanager.php?ns='.$id_of_page[0].'&edid=wiki__text", "pliki","width=800,height=600");
-		}
-	    }
-
-	    // comes from prototype.js; this is simply easier on the eyes and fingers
-	    function id(id)
-	    {
-		return document.getElementById(id);
-	    }
-	    function clear_tr_hover()
-	    {
-		var hover_tr = document.getElementsByClassName("tr_hover");
-		for(i=0;i<hover_tr.length;i++)
-		{
-			hover_tr[i].style.backgroundColor=tr_color;
-
-		}
-	    }
-	    id("aDodaj").onclick = function()
-	    {
-		id("aform").style.display = "table-row";
-		id("divContext").style.display = "none";
-		clear_tr_hover();
-		var td = id("aform").getElementsByTagName("td");
-		var td0 = td[0];
-		td0.firstChild.focus();
-	    } ';
-	    if($BUTTONS == '0')
-	    {
-	    $renderer->doc .= '
-	    document.ondblclick = function()
-	    {
-		form = document.getElementsByTagName("form");
-		form = form[0];
-		var any_not_blank = false;
-		var inputs = form.getElementsByTagName("input");
-		for(var i=0;i<inputs.length;i++)
-		{
-		    console.log(inputs[i]);
-		    if(inputs[i].value != "")
-		    {
-		      any_not_blank = true;
-		      break;
-		    }
-		}
-		if(any_not_blank == false)
-		{
-		    var text = form.getElementsByTagName("textarea");
-		    for(var i=0;i<text.length;i++)
-		    {
-			if(text[i].textContent != "")
-			{
-			  any_not_blank = true;
-			  break;
-			}
-		    }
-		}
-		if(any_not_blank == true)
-		{
-		    form.submit();
-		} else
-		{
-		    id("aform").style.display = "none";
-		}
-	    }
-	    var add_events = function(nodes) {
-		for(var i=0;i<nodes.length;i++)
-		{
-		    nodes[i].ondblclick = function(e) {
-			 var event = e || window.event;
-
-			 if (event.stopPropagation) {
-			   event.stopPropagation();
-			 } else {
-			   event.cancelBubble = true;
-			} 
-		    }
-		}
-	    }
-	    var inputs_elm = document.getElementsByTagName("input");
-	    var textarea_elm = document.getElementsByTagName("textarea"); 
-	    add_events(inputs_elm);
-	    add_events(textarea_elm);';
-	    }
-
-	    $renderer->doc .= '
-	    var _replaceContext = false;		// replace the system context menu?
-	    var _mouseOverContext = false;		// is the mouse over the context menu?
-	    var _divContext = id("divContext");	// makes my life easier
-
-	    InitContext();
-
-	    function InitContext()
-	    {
-		_divContext.onmouseover = function() { _mouseOverContext = true; };
-		_divContext.onmouseout = function() { _mouseOverContext = false; };
-
-		document.body.onmousedown = ContextMouseDown;
-		document.body.oncontextmenu = ContextShow;
-	    }
-
-	    // call from the onMouseDown event, passing the event if standards compliant
-	    function ContextMouseDown(event)
-	    {
-		if (_mouseOverContext)
-			return;
-
-		// IE is evil and doesnt pass the event object
-		if (event == null)
-			event = window.event;
-
-		// we assume we have a standards compliant browser, but check if we have IE
-		var target = event.target != null ? event.target : event.srcElement;
-
-		nestedClass = false;
-
-		elm = target;
-
-		while(elm.parentNode != document)
-		{
-		    elm.hasClass = function(cl) {
-		      var classes = this.className;
-		      if (classes.indexOf(cl) != -1)
-			return true;
-		     return false; 
-		    };
-		    if(elm.hasClass("con_menu"))
-		    {
-			    nestedClass=true;
-			    break;
-		    }
-		    elm = elm.parentNode;
-		}
-
-		// only show the context menu if the right mouse button is pressed
-		//   and a hyperlink has been clicked (the code can be made more selective)
-
-		if (event.button == 2 && nestedClass == true)
-			_replaceContext = true;
-		else if (!_mouseOverContext)
-		{
-			_divContext.style.display = "none";
-
-			clear_tr_hover();
-
-		}
-	    }
-	    function isNumber(n) {
-		  return !isNaN(parseFloat(n)) && isFinite(n);
-	    }
-	    // call from the onContextMenu event, passing the event
-	    // if this function returns false, the browsers context menu will not show up
-	    function ContextShow(event)
-	    {
-		if (_mouseOverContext)
-			return;
-
-		// IE is evil and doesnt pass the event object
-		if (event == null)
-			event = window.event;
-
-		// we assume we have a standards compliant browser, but check if we have IE
-		var target = event.target != null ? event.target : event.srcElement;
-
-		if (_replaceContext)
-		{
-			clear_tr_hover();
-			var tr = target
-			while(tr != document)
-			{
-			    if(tr.tagName.toLowerCase() == "tr")
-			    {
-				tr_color = tr.style.backgroundColor;
-				tr.style.backgroundColor="#'.$tr_hover_color.'";
-			    }
-			    tr = tr.parentNode;
-			}	
-			    
-			var tr_id;
-			
-			elm = target.parentNode;
-
-			while(elm.parentNode != document)
-			{
-			    if(isNumber(elm.id))
-			    {
-				    tr_id=elm.id;
-				    break;
-			    }
-			    elm = elm.parentNode;
-			}
-			id("aUsun").href = "'.selfURL().'&usun=" + tr_id;
-			id("aEdytuj").rel = tr_id;
-			id("aEdytuj").href = "'.selfURL('edytuj').'&edytuj=" + tr_id;
-
-			// hide the menu first to avoid an "up-then-over" visual effect
-			_divContext.style.display = "none";
-
-			_divContext.style.left = event.clientX  + "px";
-			_divContext.style.top = event.clientY  + "px";
-			_divContext.style.display = "block";
-
-			_replaceContext = false;
-
-			return false;
-		}
-	    }
-	    
-
-	    ';
-
-	    $renderer->doc .= '}
-	    </script>
-	    ';
-	    } 
 	    $baza = $bazy_dir.'/'.$NAZWA_BAZY.'.txt';
 	    $rozdzielacz = '\\';
 	    $rozdzielacz_encja = '&#92;';
@@ -469,13 +245,31 @@ class syntax_plugin_dtable extends DokuWiki_Syntax_Plugin {
 	    } 
 
 
-
+	if($acl >= 2)
+	{
+	    $renderer->doc .= '
+		<ul id="dtable_context_menu" class="contextMenu">
+		    <li class="add_before">
+			<a href="#wstaw_przed">Wstaw przed</a>
+		    </li>
+		    <li class="add_after">
+			<a href="#wstaw_za">Wstaw za</a>
+		    </li>
+		    <li class="edit separator">
+			<a href="#edit">Edytuj</a>
+		    </li>
+		    <li class="delete">
+			<a href="#usun">Usuń</a>
+		    </li>
+		</ul>
+		';
+	}
 	    if(!isset($_GET['edytuj']) && isset($grupy) && in_array('user', $grupy))
 		$renderer->doc .= '<form action="'.selfURL().'" method="post">';
 	    else
 		$renderer->doc .= '<form action="'.selfURL('edytuj').'" method="post">';
 
-	    $renderer->doc .= '<table class="inline" id="dtable"><tr>';
+	    $renderer->doc .= '<table class="inline" style="position:relative;" id="dtable"><tr>';
 	    foreach($NAGLOWKI as $v)
 	    {
 	      $renderer->doc .= "<th>$v</th>";
@@ -558,6 +352,13 @@ class syntax_plugin_dtable extends DokuWiki_Syntax_Plugin {
 	    $info = array();
 	    $renderer->doc .= p_render('xhtml',p_get_instructions(str_replace($rozdzielacz_encja, $rozdzielacz, $CON_TO_PRA)),$info);
 	    $renderer->doc .= '</form>';
+	    /*$renderer->doc .= '
+	    <script type="text/javascript">
+	    jQuery(document).ready( function() {
+		dtable.init('.$acl.', "'.selfURL().'", "'.wiki_url().'", "'.$id_of_page[0].'");
+	    });
+	    </script>
+		';*/
 
             return true;
         }
