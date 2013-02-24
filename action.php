@@ -132,6 +132,10 @@ class action_plugin_dtable extends DokuWiki_Action_Plugin {
 		    if($dane[0] == $id)
 		    {
 			array_shift($dane);
+			foreach($dane as $k => $d)
+			{
+			    $dane[$k] = str_replace('<br>', "\n", $d);
+			}
 			echo json_encode($dane);
 			break;
 		    }

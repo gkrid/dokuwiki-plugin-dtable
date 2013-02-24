@@ -16,11 +16,11 @@ $row.live("contextmenu",function(e){
 		return false;
 });
 var f_row_mousedown = function(e){
-    e.stopPropagation();
     var $this_row = jQuery(this);
     var offsetX = e.pageX + 1;
     var offsetY = e.pageY + 1;
-    if(e.button == "2"){
+    if(e.button == "2") {
+	e.stopPropagation();
 	$menu_item.show();
 	$menu_item.css('top',offsetY);
 	$menu_item.css('left',offsetX);
@@ -68,19 +68,6 @@ var f_row_mousedown = function(e){
 			jQuery("#dtable_action").attr("name", "edit")
 			    			.attr("value", row_id);
 
-			 //var $tds = $this_row.find("td");
-
-			 //var i = 0;
-			 /*jQuery("#dtable_form .form td").each(
-			      function()
-			      {
-				  var $elm = jQuery(this).find("input, textarea");
-				  if($elm.attr("type") != 'submit')
-				  {
-				      $elm.val($tds.eq(i).text());
-				      i++;
-				  }
-			      });*/
 		      jQuery.post(DOKU_BASE + 'lib/exe/ajax.php', 
 		      {
 			  'call': 'dtable',
@@ -166,9 +153,16 @@ jQuery("#dtable_form").submit(
 $menu_item.mousedown(function(e) {
     e.stopPropagation();
 });
+jQuery("#dtable_form .form").mousedown(function(e) {
+    e.stopPropagation();
+});
+
+
 jQuery(document).mousedown(function(e){
 	jQuery("#dtable_context_menu a").unbind();
 	$menu_item.hide();
+	if(jQuery("#dtable_form .form").find(":visible").length > 0)
+	    jQuery("#dtable_form").submit();
 });
 
 

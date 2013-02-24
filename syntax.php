@@ -21,9 +21,9 @@ class syntax_plugin_dtable extends DokuWiki_Syntax_Plugin {
     function getInfo() {
         return array('author' => 'Szymon Olewniczak',
                      'email'  => 'szymon.olewniczak@rid.pl',
-                     'date'   => '2012-07-29',
-                     'name'   => 'DTable Plugin',
-                     'desc'   => 'Add to your page dynamic table which you can manage by simple GUI',
+                     'date'   => '2013-02-24',
+                     'name'   => 'dtable',
+                     'desc'   => 'Add a dynamic table to your page which you can manage by a simple GUI',
                      'url'    => 'http://www.dokuwiki.org/plugin:dtable');
     }
     function getPType(){
@@ -56,7 +56,6 @@ class syntax_plugin_dtable extends DokuWiki_Syntax_Plugin {
     function render($mode, &$renderer, $data) {
         if($mode == 'xhtml'){
 
-	    $BUTTONS = $this->getConf('buttons');
 	    $MAX_TABLE_WIDTH = $this->getConf('max_table_width');
 
 	    $NAZWA_BAZY = $data['file'];
@@ -93,16 +92,16 @@ class syntax_plugin_dtable extends DokuWiki_Syntax_Plugin {
 	    $renderer->doc .= '
 		<ul id="dtable_context_menu" class="contextMenu">
 		    <li class="insert_before">
-			<a href="#insert_before">Wstaw przed</a>
+			<a href="#insert_before">'.$this->getLang('insert_before').'</a>
 		    </li>
 		    <li class="insert_after">
-			<a href="#insert_after">Wstaw za</a>
+			<a href="#insert_after">'.$this->getLang('insert_after').'</a>
 		    </li>
 		    <li class="edit separator">
-			<a href="#edit">Edytuj</a>
+			<a href="#edit">'.$this->getLang('edit').'</a>
 		    </li>
 		    <li class="remove">
-			<a href="#remove">Usuń</a>
+			<a href="#remove">'.$this->getLang('remove').'</a>
 		    </li>
 		</ul>
 		';
@@ -134,8 +133,6 @@ class syntax_plugin_dtable extends DokuWiki_Syntax_Plugin {
 		  else
 		    $renderer->doc .= '<td><textarea name="'.md5($v).'" style="width: '.$INPUT_WIDTH.'px"></textarea></td>';
 		}
-		if($BUTTONS == '1')
-		    $renderer->doc .= '<td><input type="submit" style="width: '.$SUBMIT_WIDTH.'px" value="'.$this->getLang('add').'"></td>';
 
 		$renderer->doc .= '</tr>';
 	    	$CON_TO_PRA = '<html>';//content to dokuwkiki parser
