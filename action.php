@@ -26,7 +26,7 @@ class action_plugin_dtable extends DokuWiki_Action_Plugin {
     function add_php_data(&$event, $param) {
 	global $JSINFO;
 
-	if (auth_quickaclcheck($ID) >= AUTH_WRITE) 
+	if (auth_quickaclcheck($ID) >= AUTH_EDIT) 
 	    $JSINFO['write'] = 1;
 	else
 	    $JSINFO['write'] = 0;
@@ -40,7 +40,7 @@ class action_plugin_dtable extends DokuWiki_Action_Plugin {
 	$dtable =& plugin_load('helper', 'dtable');
 
 
-	if (auth_quickaclcheck($ID) >= AUTH_WRITE) 
+	if (auth_quickaclcheck($ID) >= AUTH_EDIT) 
 	{
 
 	    $baza = $dtable->db_path($_POST['table']);

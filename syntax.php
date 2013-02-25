@@ -87,7 +87,7 @@ class syntax_plugin_dtable extends DokuWiki_Syntax_Plugin {
 	fclose($handle);
 
 
-	if (auth_quickaclcheck($ID) >= AUTH_WRITE) 
+	if (auth_quickaclcheck($ID) >= AUTH_EDIT) 
 	{
 	    $renderer->doc .= '
 		<ul id="dtable_context_menu" class="contextMenu">
