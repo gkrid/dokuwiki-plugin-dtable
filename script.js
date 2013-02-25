@@ -6,7 +6,7 @@ dtable = {};
 dtable.error = function(msg)
 {
     alert(msg);
-}
+};
 dtable.init = function()
 {
 var $menu_item = jQuery("#dtable_context_menu");
@@ -94,7 +94,7 @@ var f_row_mousedown = function(e){
 		break;
 		case '#insert_before':
 			var $before_elm = $this_row.prev();
-			var add = -1
+			var add = -1;
 			if($before_elm.length != 0)
 			    add = $before_elm.attr("id");
 
@@ -109,7 +109,7 @@ var f_row_mousedown = function(e){
 	    jQuery("#dtable_context_menu a").unbind();
 	    $menu_item.hide();
     }
-}
+};
 $row.mousedown(f_row_mousedown);
 //Add is set on id of element after we want to add new element if set to -1 we adding element at the top of the table
 jQuery("#dtable_form").submit(
