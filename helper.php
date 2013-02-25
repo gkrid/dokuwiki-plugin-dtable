@@ -91,11 +91,11 @@ class helper_plugin_dtable extends dokuwiki_plugin
     }
     function separator()
     {
-	return '|';
+	return '\\';
     }
     function separator_en()
     {
-	return '&#124;';
+	return '&#92;';
     }
     function error($code, $json=false)
     {
