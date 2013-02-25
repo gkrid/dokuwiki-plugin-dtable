@@ -27,9 +27,8 @@ var f_row_mousedown = function(e){
 
 	var row_id = $this_row.attr("id");
 	var $table = $this_row.parents("table");
-	var table_id = $table.attr("id");
-	var table_ex = table_id.split('_');
-	var table = table_ex[1];
+	var table = $table.attr("id");
+	table = table.replace(/^dtable_/, '');
 	jQuery("#dtable_context_menu a").bind("click",
 	function(e)
 	{
@@ -51,7 +50,6 @@ var f_row_mousedown = function(e){
 		      if(res.type == 'success')
 		      {
 			  $this_row.remove();
-			  console.log($table.find("tr").length);
 			  if($table.find("tr").length <= 2 )
 			  {
 			    $table.find(".form").show();
