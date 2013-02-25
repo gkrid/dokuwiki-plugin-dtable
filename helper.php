@@ -78,7 +78,8 @@ class helper_plugin_dtable extends dokuwiki_plugin
     }
     function _file_path($name)
     {
-	return ($this->getConf('bases_dir')[0] != '/' ? DOKU_INC : '').$this->getConf('bases_dir').'/'.$name;
+	$base_dir = $this->getConf('bases_dir'); 
+	return ($base_dir[0] != '/' ? DOKU_INC : '').$base_dir.'/'.$name;
     }
     
     function db_path($name)
