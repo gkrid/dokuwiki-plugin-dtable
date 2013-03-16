@@ -90,7 +90,7 @@ class syntax_plugin_dtable extends DokuWiki_Syntax_Plugin {
 	if (auth_quickaclcheck($ID) >= AUTH_EDIT) 
 	{
 	    $renderer->doc .= '
-		<ul id="dtable_context_menu" class="contextMenu">
+		<ul id="dtable_context_menu" class="contextMenu no-print">
 		    <li class="insert_before">
 			<a href="#insert_before">'.$this->getLang('insert_before').'</a>
 		    </li>
