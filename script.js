@@ -152,7 +152,7 @@ contex_handler = function(e) {
     }
     //jQuery("#dtable_context_menu a").unbind();
     $menu_item.hide();
-}
+};
 
 jQuery("#dtable_context_menu a").live("click", contex_handler);
 
