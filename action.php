@@ -134,7 +134,12 @@ class action_plugin_dtable extends DokuWiki_Action_Plugin {
 			array_shift($dane);
 			foreach($dane as $k => $d)
 			{
-			    $dane[$k] = str_replace('<br>', "\n", $d);
+			    $dane[$k] = str_replace($dtable->separator_en(), 
+					     $dtable->separator(),
+					     str_replace('<br>', "\n", $d)
+					    );
+
+
 			}
 			echo json_encode($dane);
 			break;

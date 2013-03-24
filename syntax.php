@@ -39,6 +39,9 @@ class syntax_plugin_dtable extends DokuWiki_Syntax_Plugin {
     }
 
     function handle($match, $state, $pos, &$handler) {
+
+	$special_cols = array('date');
+
 	$exploded = explode(' ', $match);
 	$file = $exploded[1];
 	preg_match('/"(.*?)"/', $match, $res);
@@ -47,7 +50,10 @@ class syntax_plugin_dtable extends DokuWiki_Syntax_Plugin {
 	foreach($fileds_raw[0] as $filed)
 	{
 	    preg_match('/(.*?)\((.*?)\)/', $filed, $res2);
-	    $fileds[$res2[1]][] = $res2[2];
+	    if(in_array($res2[1], $special_cols))
+	    {
+		$fileds[$res2[1]][] = $res2[2];
+	    }
 	    $fileds['all'][] = $res2[2];
 	}
 	return array('file' => $file, 'fileds' => $fileds);
@@ -60,7 +66,6 @@ class syntax_plugin_dtable extends DokuWiki_Syntax_Plugin {
 
 	    $NAZWA_BAZY = $data['file'];
 	    $NAGLOWKI = $data['fileds']['all'];
-	    $KOLUMNY_Z_PLIKAMI = $data['fileds']['file'];
 	    $KOLUMNY_Z_DATAMI = $data['fileds']['date'];
 	    $SUBMIT_WIDTH = 60;
 	    $INPUT_WIDTH = floor(($MAX_TABLE_WIDTH-$SUBMIT_WIDTH)/count($NAGLOWKI))-5;//border około 5px;
@@ -81,9 +86,8 @@ class syntax_plugin_dtable extends DokuWiki_Syntax_Plugin {
 	//this data should be cached
 	$handle = fopen($baza_meta, 'w');
 	$naglowki_md5 = $dtable->md5_array($NAGLOWKI);
-	$files_md5 = $dtable->md5_array($KOLUMNY_Z_PLIKAMI);
 	$data_md5 = $dtable->md5_array($KOLUMNY_Z_DATAMI);
-	fwrite($handle, json_encode(array($naglowki_md5, $files_md5, $data_md5)));
+	fwrite($handle, json_encode(array($naglowki_md5, $data_md5)));
 	fclose($handle);
 
 
@@ -107,11 +111,15 @@ class syntax_plugin_dtable extends DokuWiki_Syntax_Plugin {
 		';
 	}
 
+
+
 	    $renderer->doc .= '<form id="dtable_form" action="'.$DOKU_BASE.'lib/exe/ajax.php" method="post">';
 
 	    $renderer->doc .= '<input type="hidden" name="table" value="'.$NAZWA_BAZY.'" >';
 	    $renderer->doc .= '<input type="hidden" name="call" value="dtable" >';
 	    $renderer->doc .= '<input type="hidden" id="dtable_action" name="add" value="-1" >';
+
+	    $renderer->doc .= '<input type="hidden" name="id" value="'.$ID.'">';
 
 	    $renderer->doc .= '<table id="dtable_'.$NAZWA_BAZY.'"><tr>';
 	    foreach($NAGLOWKI as $v)
@@ -124,11 +132,13 @@ class syntax_plugin_dtable extends DokuWiki_Syntax_Plugin {
 	    if(count(file($baza)) != 0)
 		$renderer->doc .='display:none;';
 	    $renderer->doc .= '">';
+	    $renderer->doc .= '<tr class="form" style="';
+	    if(count(file($baza)) != 0)
+		$renderer->doc .='display:none;';
+	    $renderer->doc .= '">';
 		foreach($NAGLOWKI as $v)
 		{
-		  if(is_array($KOLUMNY_Z_PLIKAMI) && in_array($v, $KOLUMNY_Z_PLIKAMI))
-		    $renderer->doc .= '<td><span id="aFileName"></span><input type="text" name="'.md5($v).'" id="wiki__text"><a href="#" id="wstaw_plik">'.$this->getLang('upload_file').'</a></td>';
-		  elseif(is_array($KOLUMNY_Z_DATAMI) && in_array($v, $KOLUMNY_Z_DATAMI))
+		  if(is_array($KOLUMNY_Z_DATAMI) && in_array($v, $KOLUMNY_Z_DATAMI))
 		    $renderer->doc .= '<td><input type="date" name="'.md5($v).'" style="width: '.$INPUT_WIDTH.'px" /></td>';
 		  else
 		    $renderer->doc .= '<td><textarea name="'.md5($v).'" style="width: '.$INPUT_WIDTH.'px"></textarea></td>';
