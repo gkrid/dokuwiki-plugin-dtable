@@ -21,7 +21,7 @@ class syntax_plugin_dtable extends DokuWiki_Syntax_Plugin {
     function getInfo() {
         return array('author' => 'Szymon Olewniczak',
                      'email'  => 'szymon.olewniczak@rid.pl',
-                     'date'   => '2013-02-24',
+                     'date'   => '2013-03-25',
                      'name'   => 'dtable',
                      'desc'   => 'Add a dynamic table to your page which you can manage by a simple GUI',
                      'url'    => 'http://www.dokuwiki.org/plugin:dtable');
@@ -76,6 +76,10 @@ class syntax_plugin_dtable extends DokuWiki_Syntax_Plugin {
 	$baza = $dtable->db_path($NAZWA_BAZY);
 	$baza_meta = $dtable->db_meta_path($NAZWA_BAZY);
 
+	if(!is_dir($dtable->file_path()))
+	{
+	    mkdir($dtable->file_path(), 0755, true);
+	}
 
 	//creata base
 	if(!file_exists($baza)) {

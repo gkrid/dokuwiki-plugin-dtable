@@ -27,10 +27,15 @@ class helper_plugin_dtable extends dokuwiki_plugin
 	'return' => array('md5_array' => 'array'),
       );
       $result[] = array(
+	'name'   => 'file_path',
+	'desc'   => 'returns db path',
+	'params' => array('name' => 'string'),
+	'return' => array('path' => 'string'),
+      );
+      $result[] = array(
 	'name'   => 'db_path',
 	'desc'   => 'returns full db path',
 	'params' => array('name' => 'string'),
-	'return' => array('path' => 'string'),
       );
       $result[] = array(
 	'name'   => 'db_meta_path',
@@ -76,7 +81,7 @@ class helper_plugin_dtable extends dokuwiki_plugin
 	}
 	return $md5_array;	
     }
-    function _file_path($name)
+    function file_path($name='')
     {
 	$base_dir = $this->getConf('bases_dir'); 
 	return ($base_dir[0] != '/' ? DOKU_INC : '').$base_dir.'/'.$name;
@@ -84,11 +89,11 @@ class helper_plugin_dtable extends dokuwiki_plugin
     
     function db_path($name)
     {
-	return $this->_file_path($name.'.txt');
+	return $this->file_path($name.'.txt');
     }
     function db_meta_path($name)
     {
-	return $this->_file_path('meta.'.$name.'.txt');
+	return $this->file_path('meta.'.$name.'.txt');
     }
     function separator()
     {
