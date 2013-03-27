@@ -18,14 +18,6 @@ require_once DOKU_PLUGIN.'syntax.php';
  */
 class syntax_plugin_dtable extends DokuWiki_Syntax_Plugin {
 
-    function getInfo() {
-        return array('author' => 'Szymon Olewniczak',
-                     'email'  => 'szymon.olewniczak@rid.pl',
-                     'date'   => '2013-03-25',
-                     'name'   => 'dtable',
-                     'desc'   => 'Add a dynamic table to your page which you can manage by a simple GUI',
-                     'url'    => 'http://www.dokuwiki.org/plugin:dtable');
-    }
     function getPType(){
        return 'block';
     }
@@ -60,6 +52,7 @@ class syntax_plugin_dtable extends DokuWiki_Syntax_Plugin {
     }
 
     function render($mode, &$renderer, $data) {
+	global $ID;
         if($mode == 'xhtml'){
 
 	    $MAX_TABLE_WIDTH = $this->getConf('max_table_width');
@@ -93,7 +86,6 @@ class syntax_plugin_dtable extends DokuWiki_Syntax_Plugin {
 	$data_md5 = $dtable->md5_array($KOLUMNY_Z_DATAMI);
 	fwrite($handle, json_encode(array($naglowki_md5, $data_md5)));
 	fclose($handle);
-
 
 	if (auth_quickaclcheck($ID) >= AUTH_EDIT) 
 	{
