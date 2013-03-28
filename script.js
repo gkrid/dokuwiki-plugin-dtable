@@ -35,7 +35,6 @@ dtable.hide_form = function($parent)
 };
 dtable.init = function()
 {
-
 $toolbar = jQuery("body").append('<div id="'+dtable.toolbar_id+'" style="position:absolute;display:none;"></div>');
 
 //If I won't do it, initToolbar will not work.

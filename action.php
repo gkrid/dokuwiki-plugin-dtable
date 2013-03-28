@@ -24,7 +24,7 @@ class action_plugin_dtable extends DokuWiki_Action_Plugin {
     }
     
     function add_php_data(&$event, $param) {
-	global $JSINFO;
+	global $JSINFO, $ID;
 
 	if (auth_quickaclcheck($ID) >= AUTH_EDIT) 
 	    $JSINFO['write'] = 1;
@@ -39,9 +39,6 @@ class action_plugin_dtable extends DokuWiki_Action_Plugin {
 
 	$dtable =& plugin_load('helper', 'dtable');
 
-
-	if (auth_quickaclcheck($ID) >= AUTH_EDIT) 
-	{
 
 	    $baza = $dtable->db_path($_POST['table']);
 	    $baza_meta = $dtable->db_meta_path($_POST['table']);
@@ -215,6 +212,5 @@ class action_plugin_dtable extends DokuWiki_Action_Plugin {
 		  echo json_encode(array('type' => 'success'));
 
 	    }
-	}
     }
 }
