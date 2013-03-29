@@ -107,8 +107,6 @@ class syntax_plugin_dtable extends DokuWiki_Syntax_Plugin {
 		';
 	}
 
-
-
 	    $renderer->doc .= '<form id="dtable_form" action="'.$DOKU_BASE.'lib/exe/ajax.php" method="post">';
 
 	    $renderer->doc .= '<input type="hidden" name="table" value="'.$NAZWA_BAZY.'" >';

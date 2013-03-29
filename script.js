@@ -35,7 +35,19 @@ dtable.hide_form = function($parent)
 };
 dtable.init = function()
 {
-$toolbar = jQuery("body").append('<div id="'+dtable.toolbar_id+'" style="position:absolute;display:none;"></div>');
+$toolbar = jQuery("body").append('<div id="'+dtable.toolbar_id+'" style="position:absolute;display:none;z-index:999"></div>');
+
+jQuery.ui.dialog.prototype._oldcreate = jQuery.ui.dialog.prototype._create;
+jQuery.extend(jQuery.ui.dialog.prototype, {
+    _init: function( )
+    {
+	//This must be done to have correct z-index bahaviour
+	jQuery("#link__wiz").appendTo("body");
+	 this._oldcreate();
+    }
+});
+
+console.log(jQuery.ui.dialog.prototype);
 
 //If I won't do it, initToolbar will not work.
 //$marked_textarea = 
