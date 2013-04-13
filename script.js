@@ -6,7 +6,8 @@ dtable = {};
 dtable.toolbar_id = "dtable_tool__bar";
 //I need it to use dokuwiki toolbar
 dtable.textarea_id = "dtable_wiki__text";
-
+//Set it to true if we are waiting fro form to send
+dtable.form_processing = false;
 //Store informatino about actual clicked row
 dtable.row = {};
 
@@ -189,6 +190,7 @@ $row.mousedown(f_row_mousedown);
 jQuery("#dtable_form").submit(
 	function()
 	{
+	    dtable.form_processing = true;
 	    var data = {};
 	    var $form = jQuery(this);
 	    jQuery(this).find("input, textarea").each(
@@ -227,6 +229,7 @@ jQuery("#dtable_form").submit(
 		      dtable.error(res.msg);
 	          }
 		  jQuery("#dtable_action").attr("name", "add").attr("value", "-1");
+		  dtable.form_processing = false;
 	   });
 	   return false;
 	});
@@ -282,10 +285,13 @@ jQuery("#"+dtable.toolbar_id).dblclick(function(e) {
 });
 
 jQuery(document).dblclick(function(e){
-	//jQuery("#dtable_context_menu a").unbind();
-	$menu_item.hide();
-	if(jQuery("#dtable_form .form").find(":visible").length > 0)
-	    jQuery("#dtable_form").submit();
+	//sent form only once
+	if(dtable.form_processing == false)
+	{
+	    $menu_item.hide();
+	    if(jQuery("#dtable_form .form").find(":visible").length > 0)
+		jQuery("#dtable_form").submit();
+	}
 });
 
 
