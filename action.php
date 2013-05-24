@@ -21,6 +21,99 @@ class action_plugin_dtable extends DokuWiki_Action_Plugin {
     function register(&$controller) {
 	    $controller->register_hook('DOKUWIKI_STARTED', 'AFTER',  $this, 'add_php_data');
 	    $controller->register_hook('AJAX_CALL_UNKNOWN', 'BEFORE',  $this, 'handle_ajax');
+	    $controller->register_hook('IO_WIKIPAGE_WRITE', 'BEFORE',  $this, 'export_dtable');
+    }
+    function export_dtable(&$event, $parm)
+    {
+	$lines = explode("\n", $event->data[0][1]);
+	$new_lines = array();
+	foreach($lines as $line)
+	{
+	    if(preg_match('/^\[export[\s]+([^\s]+[\s]+dtable|dtable)/', $line))  
+	    {
+
+		//remove [export 
+		$line = substr($line, 7);
+		$line = trim($line);
+
+		$dtable_str = $line;
+
+		$dtable_str = substr($dtable_str, strpos($dtable_str, 'dtable')+7);
+		$dtable_str = substr($dtable_str, 0, -1);//remove ]
+
+		//leave [dtable as code
+		$new_lines[] = '  [dtable '.$dtable_str.']';
+
+		$h_dtable =& plugin_load('helper', 'dtable');
+		$data = $h_dtable->syntax_parse($dtable_str);
+
+		if(strpos($line, 'exttab2') === 0)
+		{
+		    $new_lines[] = '';
+		    $new_lines[] = '{|';
+		    $new_lines[] = '|+';
+		    foreach($data['fileds']['all'] as $head)
+		    {
+			$new_lines[] = '!'.$head;
+		    }	
+
+		    $baza = $h_dtable->db_path($data['file']);
+		    $rows = file($baza);
+		    $new_row = '';
+		    foreach($rows as $row)
+		    {
+			$new_lines[] = '|-';
+			$new_row = '';
+			//remove last \n
+			$row = substr($row, 0, -1);
+			$row = str_replace('<br>', '\\', $row);
+			$dane = explode($h_dtable->separator(), $row);
+
+			for($i=1;$i<sizeof($dane);$i++)
+			{
+				$new_lines[] = '|'.$dane[$i];
+			}
+
+		    }
+		    $new_lines[] = '|}';
+		} else
+		{
+		    $new_lines[] = '';
+		    $header = '';
+		    foreach($data['fileds']['all'] as $head)
+		    {
+			$header .= '^'.$head;
+		    }	
+		    $header .= '^';
+		    $new_lines[] = $header;
+
+		    $baza = $h_dtable->db_path($data['file']);
+		    $rows = file($baza);
+		    $new_row = '';
+		    foreach($rows as $row)
+		    {
+			$new_row = '';
+			//remove last \n
+			$row = substr($row, 0, -1);
+			$row = str_replace('<br>', '', $row);
+			$dane = explode($h_dtable->separator(), $row);
+			for($i=1;$i<sizeof($dane);$i++)
+			{
+			    if(strlen($dane[$i]) <= 0)
+				$new_row .= '| ';
+			    else 
+				$new_row .= '|'.$dane[$i];
+			}
+
+		    $new_lines[] = $new_row.'|';
+		    }
+		}
+	    } else
+	    {
+		$new_lines[] = $line;
+	    }
+	}
+	$event->data[0][1] = implode("\n", $new_lines);
     }
     
     function add_php_data(&$event, $param) {

@@ -67,6 +67,12 @@ class helper_plugin_dtable extends dokuwiki_plugin
 	'params' => array('string' => 'string'),
 	'return' => array('content' => 'string'),
       );
+      $result[] = array(
+	'name'   => 'syntax_parse',
+	'desc'   => 'save [dtable ] syntax to array. match -> without [dtable ]',
+	'params' => array('match' => 'string'),
+	'return' => array('parsed' => 'array'),
+      );
       return $result;
     }
     function md5_array($array)
@@ -118,6 +124,26 @@ class helper_plugin_dtable extends dokuwiki_plugin
 	$info = array();
 	$r_str = str_replace('<br>', "\n", str_replace($this->separator_en(), $this->separator(), $string));
 	return p_render('xhtml',p_get_instructions($r_str),$info);
+    }
+    function syntax_parse($match)
+    {
+	$special_cols = array('date');
+
+	$exploded = explode(' ', $match);
+	$file = $exploded[0];
+	preg_match('/"(.*?)"/', $match, $res);
+	$fileds = array();
+	preg_match_all('/[[:alnum:]]*\(.*?\)/', $res[1], $fileds_raw);
+	foreach($fileds_raw[0] as $filed)
+	{
+	    preg_match('/(.*?)\((.*?)\)/', $filed, $res2);
+	    if(in_array($res2[1], $special_cols))
+	    {
+		$fileds[$res2[1]][] = $res2[2];
+	    }
+	    $fileds['all'][] = $res2[2];
+	}
+	return array('file' => $file, 'fileds' => $fileds);
     }
 /*    function getMethods(){
       $result = array();

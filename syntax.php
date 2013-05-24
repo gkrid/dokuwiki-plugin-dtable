@@ -31,24 +31,14 @@ class syntax_plugin_dtable extends DokuWiki_Syntax_Plugin {
     }
 
     function handle($match, $state, $pos, &$handler) {
+	//remove [dtable
+	$match = substr($match, 7);
+	$match = substr($match,0, -1);
+	$match = trim($match);
 
-	$special_cols = array('date');
+	$dtable =& plugin_load('helper', 'dtable');
+	return $dtable->syntax_parse($match);
 
-	$exploded = explode(' ', $match);
-	$file = $exploded[1];
-	preg_match('/"(.*?)"/', $match, $res);
-	$fileds = array();
-	preg_match_all('/[[:alnum:]]*\(.*?\)/', $res[1], $fileds_raw);
-	foreach($fileds_raw[0] as $filed)
-	{
-	    preg_match('/(.*?)\((.*?)\)/', $filed, $res2);
-	    if(in_array($res2[1], $special_cols))
-	    {
-		$fileds[$res2[1]][] = $res2[2];
-	    }
-	    $fileds['all'][] = $res2[2];
-	}
-	return array('file' => $file, 'fileds' => $fileds);
     }
 
     function render($mode, &$renderer, $data) {
