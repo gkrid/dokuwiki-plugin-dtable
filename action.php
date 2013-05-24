@@ -66,12 +66,17 @@ class action_plugin_dtable extends DokuWiki_Action_Plugin {
 			$new_row = '';
 			//remove last \n
 			$row = substr($row, 0, -1);
-			$row = str_replace('<br>', '\\', $row);
 			$dane = explode($h_dtable->separator(), $row);
-
 			for($i=1;$i<sizeof($dane);$i++)
 			{
-				$new_lines[] = '|'.$dane[$i];
+				$new_lines[] = '|';
+				$lines_in_cells = explode('<br>', $dane[$i]);
+				foreach($lines_in_cells as $v)
+				{
+				    if($v != '')
+					$new_lines[] = $v;
+				}
+
 			}
 
 		    }
