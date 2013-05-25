@@ -10,7 +10,8 @@ dtable.textarea_id = "dtable_wiki__text";
 dtable.form_processing = false;
 //Store informatino about actual clicked row
 dtable.row = {};
-
+//Id of processed dtable
+dtable.id = "";
 dtable.error = function(msg)
 {
     alert(msg);
@@ -48,11 +49,8 @@ jQuery.extend(jQuery.ui.dialog.prototype, {
     }
 });
 
-console.log(jQuery.ui.dialog.prototype);
-
 //If I won't do it, initToolbar will not work.
-//$marked_textarea = 
-jQuery("#dtable_form textarea").first().attr("id", dtable.textarea_id);
+jQuery(".dtable_form textarea").first().attr("id", dtable.textarea_id);
 
 initToolbar(dtable.toolbar_id,dtable.textarea_id,toolbar);
 
@@ -68,9 +66,11 @@ contex_handler = function(e) {
     e.preventDefault();
 
     $this_row = dtable.row;
+    dtable.id = $this_row.parents(".dtable_form").attr("id");
 
     var row_id = $this_row.attr("id");
     var $table = $this_row.parents("table");
+    var $form = $this_row.parents("form");
     var table = $table.attr("id");
     table = table.replace(/^dtable_/, '');
 
@@ -105,7 +105,7 @@ contex_handler = function(e) {
 	case '#edit':
 		$this_row.after($table.find(".form"));
 
-		jQuery("#dtable_action").attr("name", "edit")
+		$form.find(".dtable_action").attr("name", "edit")
 					.attr("value", row_id);
 
 	      jQuery.post(DOKU_BASE + 'lib/exe/ajax.php', 
@@ -117,7 +117,7 @@ contex_handler = function(e) {
 	      function(data)
 	      {
 		  var res = jQuery.parseJSON(data);
-		  var $form_elm = jQuery("#dtable_form .form td").find("input, textarea");
+		  var $form_elm = jQuery("#"+dtable.id+" .form td").find("input, textarea");
 		  var i = 0;
 		  for(elm in res)
 		  {
@@ -140,7 +140,7 @@ contex_handler = function(e) {
 			    dtable.hide_form($table);  
 
 			    $table.find(".form input, .form textarea").val('');
-			    jQuery("#dtable_action").attr("name", "add").attr("value", "-1");
+			    $form.find(".dtable_action").attr("name", "add").attr("value", "-1");
 			
 			    old_row.show();
 			    contex_handler(e);
@@ -149,7 +149,7 @@ contex_handler = function(e) {
 	case '#insert_after':
 		$this_row.after($table.find(".form"));
 		dtable.show_form($table);  
-		jQuery("#dtable_action").val($this_row.attr('id'));
+		$form.find(".dtable_action").val($this_row.attr('id'));
 	break;
 	case '#insert_before':
 		var $before_elm = $this_row.prev();
@@ -157,7 +157,7 @@ contex_handler = function(e) {
 		if($before_elm.length != 0)
 		    add = $before_elm.attr("id");
 
-		jQuery("#dtable_action").val(add);
+		$form.find(".dtable_action").val(add);
 		$this_row.before($table.find(".form"));
 		dtable.show_form($table);  
 	break;
@@ -187,53 +187,59 @@ var f_row_mousedown = function(e) {
 };
 $row.mousedown(f_row_mousedown);
 //Add is set on id of element after we want to add new element if set to -1 we adding element at the top of the table
-jQuery("#dtable_form").submit(
+jQuery(".dtable_form").submit(
 	function()
 	{
-	    dtable.form_processing = true;
-	    var data = {};
 	    var $form = jQuery(this);
-	    jQuery(this).find("input, textarea").each(
-		function()
-		{
-		    data[jQuery(this).attr("name")] = jQuery(this).val();
-		});
-	    jQuery.post(DOKU_BASE + 'lib/exe/ajax.php', 
-			data,
-	    function(data)
+	    if($form.attr("id") == dtable.id)
 	    {
-		  var res = jQuery.parseJSON(data);
-		  if(res.type == 'success')
-		  {
-		      
-		      $new_elm = jQuery('<tr id="'+res.id+'" class="tr_hover">');
-		      $form.find(".form").after($new_elm);
-
-		      for(f in res.fileds)
+		dtable.form_processing = true;
+		var data = {};
+		jQuery(this).find("input, textarea").each(
+		    function()
+		    {
+			data[jQuery(this).attr("name")] = jQuery(this).val();
+		    });
+		jQuery.post(DOKU_BASE + 'lib/exe/ajax.php', 
+			    data,
+		function(data)
+		{
+		      var res = jQuery.parseJSON(data);
+		      if(res.type == 'success')
 		      {
-			  $new_elm.append("<td>"+res.fileds[f]+"</td>");
+			  
+			  $new_elm = jQuery('<tr id="'+res.id+'" class="tr_hover">');
+			  $form.find(".form").after($new_elm);
+
+			  for(f in res.fileds)
+			  {
+			      $new_elm.append("<td>"+res.fileds[f]+"</td>");
+			  }
+
+			  $new_elm.mousedown(f_row_mousedown);
+
+			  dtable.hide_form($form);
+			  $form.find(".form input, textarea").val('');
+
+			$edit_link = jQuery("#dtable_context_menu a");
+			
+			$edit_link.die();
+			$edit_link.live('click', contex_handler);
+			  
+		      } else
+		      {
+			  dtable.error(res.msg);
 		      }
-
-		      $new_elm.mousedown(f_row_mousedown);
-
-		      dtable.hide_form($form);
-		      $form.find(".form input, textarea").val('');
-
-		    $edit_link = jQuery("#dtable_context_menu a");
-		    
-		    $edit_link.die();
-		    $edit_link.live('click', contex_handler);
-		      
-		  } else
-		  {
-		      dtable.error(res.msg);
-	          }
-		  jQuery("#dtable_action").attr("name", "add").attr("value", "-1");
-		  dtable.form_processing = false;
-	   });
+		      $form.find(".dtable_action").attr("name", "add").attr("value", "-1");
+		      dtable.form_processing = false;
+	       });
+	    }
 	   return false;
 	});
-jQuery("#dtable_form textarea").bind('focus', function(e) {
+jQuery(".dtable_form textarea").bind('focus', function(e) {
+
+    dtable.id = jQuery(this).parents(".dtable_form").attr("id");
+
     //If I won't do it, initToolbar will not work.
     //jQuery("#dtable_form textarea:first-child").attr("id", "");
     //jQuery(this).attr("id", dtable.textarea_id);
@@ -276,7 +282,7 @@ jQuery("#dtable_form textarea").bind('focus', function(e) {
 $menu_item.dblclick(function(e) {
     e.stopPropagation();
 });
-jQuery("#dtable_form .form").dblclick(function(e) {
+jQuery(".dtable_form .form").dblclick(function(e) {
     e.stopPropagation();
 });
 
@@ -289,8 +295,8 @@ jQuery(document).dblclick(function(e){
 	if(dtable.form_processing == false)
 	{
 	    $menu_item.hide();
-	    if(jQuery("#dtable_form .form").find(":visible").length > 0)
-		jQuery("#dtable_form").submit();
+	    if(jQuery(".dtable_form .form").find(":visible").length > 0)
+		jQuery(".dtable_form").submit();
 	}
 });
 

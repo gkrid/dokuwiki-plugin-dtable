@@ -97,11 +97,11 @@ class syntax_plugin_dtable extends DokuWiki_Syntax_Plugin {
 		';
 	}
 
-	    $renderer->doc .= '<form id="dtable_form" action="'.$DOKU_BASE.'lib/exe/ajax.php" method="post">';
+	    $renderer->doc .= '<form class="dtable_form" id="dtable_form_'.$NAZWA_BAZY.rand(1,1000000).'" action="'.$DOKU_BASE.'lib/exe/ajax.php" method="post">';
 
 	    $renderer->doc .= '<input type="hidden" name="table" value="'.$NAZWA_BAZY.'" >';
 	    $renderer->doc .= '<input type="hidden" name="call" value="dtable" >';
-	    $renderer->doc .= '<input type="hidden" id="dtable_action" name="add" value="-1" >';
+	    $renderer->doc .= '<input type="hidden" class="dtable_action" name="add" value="-1" >';
 
 	    $renderer->doc .= '<input type="hidden" name="id" value="'.$ID.'">';
 
