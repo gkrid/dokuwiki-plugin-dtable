@@ -16,7 +16,7 @@ require_once DOKU_PLUGIN.'syntax.php';
  * All DokuWiki plugins to extend the parser/rendering mechanism
  * need to inherit from this class
  */
-class syntax_plugin_dtable extends DokuWiki_Syntax_Plugin {
+class syntax_plugin_dtable_remote extends DokuWiki_Syntax_Plugin {
 
     function getPType(){
        return 'block';
@@ -27,7 +27,7 @@ class syntax_plugin_dtable extends DokuWiki_Syntax_Plugin {
 
 
     function connectTo($mode) {
-	$this->Lexer->addSpecialPattern('\[dtable.*?\]',$mode,'plugin_dtable');
+	$this->Lexer->addSpecialPattern('\[dtable.*?\]',$mode,'plugin_dtable_remote');
     }
 
     function handle($match, $state, $pos, &$handler) {
@@ -97,7 +97,8 @@ class syntax_plugin_dtable extends DokuWiki_Syntax_Plugin {
 		';
 	}
 
-	    $renderer->doc .= '<form class="dtable_form" id="dtable_form_'.$NAZWA_BAZY.rand(1,1000000).'" action="'.$DOKU_BASE.'lib/exe/ajax.php" method="post">';
+	    //$renderer->doc .= '<form class="dtable_form" id="dtable_form_'.$NAZWA_BAZY.rand(1,1000000).'" action="'.$DOKU_BASE.'lib/exe/ajax.php" method="post">';
+	    $renderer->doc .= '<form class="dtable" id="dtable_'.$NAZWA_BAZY.'" action="'.$DOKU_BASE.'lib/exe/ajax.php" method="post">';
 
 	    $renderer->doc .= '<input type="hidden" name="table" value="'.$NAZWA_BAZY.'" >';
 	    $renderer->doc .= '<input type="hidden" name="call" value="dtable" >';
@@ -105,18 +106,14 @@ class syntax_plugin_dtable extends DokuWiki_Syntax_Plugin {
 
 	    $renderer->doc .= '<input type="hidden" name="id" value="'.$ID.'">';
 
-	    $renderer->doc .= '<table id="dtable_'.$NAZWA_BAZY.'"><tr>';
+	    $renderer->doc .= '<table><tr>';
 	    foreach($NAGLOWKI as $v)
 	    {
 	      $renderer->doc .= "<th>$v</th>";
 	    }
 	    $renderer->doc .= '</tr>';
 
-	    $renderer->doc .= '<tr class="form" style="';
-	    if(count(file($baza)) != 0)
-		$renderer->doc .='display:none;';
-	    $renderer->doc .= '">';
-	    $renderer->doc .= '<tr class="form" style="';
+	    $renderer->doc .= '<tr class="form_row" style="';
 	    if(count(file($baza)) != 0)
 		$renderer->doc .='display:none;';
 	    $renderer->doc .= '">';
@@ -137,7 +134,7 @@ class syntax_plugin_dtable extends DokuWiki_Syntax_Plugin {
 
 		while (($bufor = fgets($handle)) !== false) {
 		    $dane = explode($dtable->separator(), $bufor);
-			$CON_TO_PRA .= '<tr id="'.$dane[0].'" class="tr_hover"></html>';
+			$CON_TO_PRA .= '<tr></html>';
 			for($i=1;$i<sizeof($dane);$i++)
 			{
 			    $CON_TO_PRA .= '<html><td></html>'.$dane[$i].'<html></td></html>';

@@ -22,6 +22,67 @@ class action_plugin_dtable extends DokuWiki_Action_Plugin {
 	    $controller->register_hook('DOKUWIKI_STARTED', 'AFTER',  $this, 'add_php_data');
 	    $controller->register_hook('AJAX_CALL_UNKNOWN', 'BEFORE',  $this, 'handle_ajax');
 	    $controller->register_hook('IO_WIKIPAGE_WRITE', 'BEFORE',  $this, 'export_dtable');
+	    $controller->register_hook('PARSER_WIKITEXT_PREPROCESS', 'AFTER',  $this, 'mark_dtables');
+    }
+    function mark_dtables(&$event, $parm)
+    {
+	$lines = explode("\n", $event->data);
+	$in_tab = 0;
+	$in_dtable_tag = 0;
+
+	$new_lines = $lines;
+	if($this->getConf('all_tables'))
+	{
+	    $new_lines = array();
+	    foreach($lines as $line)
+	    {
+		if(strpos($line, '<dtable>') === 0)
+		    $in_dtable_tag = 1;
+		if(strpos($line, '</dtable>') === 0)
+		    $in_dtable_tag = 0;
+
+		if(strpos($line, '|') !== 0 && $in_tab == 1 && $in_dtable_tag == 0)
+		{
+		    $new_lines[] = '</dtable>';
+		    $in_tab = 0;
+		}
+
+		if(strpos($line, '^') === 0 && $in_tab == 0 && $in_dtable_tag == 0)
+		{
+		    $new_lines[] = '<dtable>';
+		    $in_tab = 1;
+		}
+
+		$new_lines[] = $line;
+	    }
+	    $lines = $new_lines;
+	}
+	if($this->getConf('all_exttabs'))
+	{
+	    $new_lines = array();
+	    foreach($lines as $line)
+	    {
+		if(strpos($line, '<dtable>') === 0)
+		    $in_dtable_tag = 1;
+		if(strpos($line, '</dtable>') === 0)
+		    $in_dtable_tag = 0;
+
+		if(strpos($line, '{|') === 0 && $in_tab == 0 && $in_dtable_tag == 0)
+		{
+		    $new_lines[] = '<dtable>';
+		    $in_tab = 1;
+		}
+		if(strpos($line, '|}') === 0 && $in_tab == 1 && $in_dtable_tag == 0)
+		{
+		    $new_lines[] = $line;
+		    $new_lines[] = '</dtable>';
+		    $in_tab = 0;
+		} else
+		    $new_lines[] = $line;
+
+	    }
+	}
+	$event->data = implode("\n", $new_lines);
     }
     function export_dtable(&$event, $parm)
     {
@@ -143,37 +204,11 @@ class action_plugin_dtable extends DokuWiki_Action_Plugin {
 
 	    if(isset($_POST['add']))
 	    {
-		$after_id = $_POST['add'];
-		$after_line = -1;
-
-		$max_id = 0;
-		$handle = fopen($baza, 'r');
-		if (!$handle) 
-		    exit($dtable->error('db_error', true));
-
-		$i=0;
-		while (($bufor = fgets($handle)) !== false) {
-		    $dane = explode($dtable->separator(), $bufor);
-		    if($max_id < (int)$dane[0])
-		    {
-		      $max_id = (int)$dane[0];
-		    }
-		    if($after_id == $dane[0])
-			$after_line = $i;
-		    $i++;
-		}
-		if (!feof($handle)) 
-		    exit($dtable->error('db_error', true));
-
-		fclose($handle);
+		$after_line = $_POST['add'];
 
 		$lines = file($baza);
-		if($lines) 
-		    $max_id++;
-		else
-		    $max_id=1;
 
-		$line .= $max_id.$dtable->separator();
+		$line .= '-'.$dtable->separator();
 		$handle = fopen($baza, 'w+');
 		if (!$handle) 
 		    exit($dtable->error('db_error', true));
@@ -187,7 +222,6 @@ class action_plugin_dtable extends DokuWiki_Action_Plugin {
 		    $heads = $conf[0];
 
 		    $in_fileds = array();
-
 
 		    foreach($heads as $v)
 		    {  
@@ -203,16 +237,16 @@ class action_plugin_dtable extends DokuWiki_Action_Plugin {
 		    $line .= "\n";
 		    if($after_line == -1)
 			array_unshift($lines, $line);
-		     
-		    foreach ($lines as $k => $file_line) { 
-			fwrite( $handle, "$file_line"); 
-			if($k == $after_line)
-			    fwrite( $handle, "$line"); 
-		    }
+
+			foreach ($lines as $k => $file_line) { 
+			    fwrite( $handle, "$file_line"); 
+			    if($k == $after_line)
+				fwrite( $handle, "$line"); 
+			}
 
 		    fclose($handle);
 
-		    echo json_encode(array('type' => 'success', 'id' => $max_id, 'fileds' => $in_fileds));
+		    echo json_encode(array('type' => 'success', 'fileds' => $in_fileds));
 
 	    } elseif(isset($_POST['get']))
 	    {
@@ -222,10 +256,10 @@ class action_plugin_dtable extends DokuWiki_Action_Plugin {
 		if(!$lines) 
 		    exit($dtable->error('db_error', true));
 
-	        foreach ($lines as $file_line) { 
-		    $dane = explode($dtable->separator(), $file_line);
-		    if($dane[0] == $id)
+	        foreach ($lines as $key => $file_line) { 
+		    if($key == $id)
 		    {
+			$dane = explode($dtable->separator(), $file_line);
 			array_shift($dane);
 			foreach($dane as $k => $d)
 			{
@@ -233,7 +267,6 @@ class action_plugin_dtable extends DokuWiki_Action_Plugin {
 					     $dtable->separator(),
 					     str_replace('<br>', "\n", $d)
 					    );
-
 
 			}
 			echo json_encode($dane);
@@ -274,9 +307,8 @@ class action_plugin_dtable extends DokuWiki_Action_Plugin {
 	    if (!$handle) 
 		exit($dtable->error('db_error', true));
 
-	      foreach ($lines as $file_line) { 
-		$dane = explode($dtable->separator(), $file_line);
-		if($dane[0] != $id)
+	      foreach ($lines as $k => $file_line) { 
+		if($k != $id)
 		{
 		  fwrite( $handle, "$file_line");
 		} else
@@ -299,9 +331,8 @@ class action_plugin_dtable extends DokuWiki_Action_Plugin {
 		if (!$handle) 
 		    exit($dtable->error('db_error', true));
 
-		  foreach ($lines as $file_line) { 
-		    $dane = explode($dtable->separator(), $file_line);
-		    if($dane[0] != $id)
+		  foreach ($lines as $k => $file_line) { 
+		    if($k != $id)
 		    {
 			fwrite( $handle, "$file_line");
 		    }
