@@ -1,5 +1,5 @@
 /* Generic context menu styles */
-.contextMenu {
+#dtable_context_menu {
 	position: absolute;
 	width: 140px;
 	z-index: 99999;
@@ -10,14 +10,14 @@
 	display: none;
 }
 
-.contextMenu LI {
+#dtable_context_menu li {
 	list-style: none;
 	padding: 0px;
 	margin: 0px;
 }
 
-.contextMenu A {
-	color: #333;
+#dtable_context_menu a {
+	color: #2B73B7;
 	text-decoration: none;
 	display: block;
 	line-height: 20px;
@@ -29,32 +29,31 @@
 	padding-left: 28px;
 }
 
-.contextMenu LI.hover A {
-	color: #FFF;
-	background-color: #3399FF;
+#dtable_context_menu a:hover {
+	text-decoration: underline;
 }
 
-.contextMenu LI.disabled A {
-	color: #AAA;
-	cursor: default;
-}
-
-.contextMenu LI.hover.disabled A {
-	background-color: transparent;
-}
-
-.contextMenu LI.separator {
+#dtable_context_menu li.separator {
 	border-top: solid 1px #CCC;
 }
 
 /*
-	Adding Icons
+	adding Icons
 	
 	You can add icons to the context menu by adding
-	classes to the respective LI element(s)
+	classes to the respective li element(s)
 */
 
-.contextMenu LI.edit A { background-image: url(images/edit.png); }
-.contextMenu LI.remove A { background-image: url(images/remove.png); }
-.contextMenu LI.insert_after A { background-image: url(images/insert_after.png); }
-.contextMenu LI.insert_before A { background-image: url(images/insert_before.png); }
+#dtable_context_menu li.edit a { background-image: url(images/edit.png); }
+#dtable_context_menu li.remove a { background-image: url(images/remove.png); }
+#dtable_context_menu li.insert_after a { background-image: url(images/insert_after.png); }
+#dtable_context_menu li.insert_before a { background-image: url(images/insert_before.png); }
+
+
+.dtable .panlock { background-image: url("images/panlock.png"); }
+.dtable .panunlock { background-image: url("images/panunlock.png"); }
+
+.dtable .panlock span
+{
+    font-weight:bold;
+}

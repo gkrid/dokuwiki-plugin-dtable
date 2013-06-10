@@ -12,6 +12,32 @@ dtable.form_processing = false;
 dtable.row = {};
 //Id of processed dtable
 dtable.id = "";
+//if page locked
+dtable.page_locked = 0;
+
+//state of lock
+//0 -> we don't know anything
+//1 -> someone lock the page and we waiting until we could refresh it 
+//2 -> we can edit page for some time but we left browser alone and our lock expires and someone else came end start to edit page, so we need to lock our page and optionally send the form.
+dtable.lock_state = 0;
+
+//use to determine if user doing something
+dtable.pageX = 0;
+dtable.pageY = 0;
+dtable.prev_pageX = 0;
+dtable.prev_pageY = 0;
+
+//check if forms in dtable are changed
+dtable.prev_val = '';
+
+//When my or someones else lock expires
+dtable.lock_expires = -1;
+
+//All intervals
+dtable.intervals = [];
+
+dtable.lock_seeker_timeout = 5*1000;
+
 dtable.error = function(msg)
 {
     alert(msg);
@@ -21,7 +47,7 @@ dtable.show_form = function($parent)
     var $form = $parent.find(".form_row"); 
     var $toolbar = jQuery("#"+dtable.toolbar_id);
     $form.show();
-    console.log($form);
+
     var offset = $form.offset();
     $toolbar.css({
 	"left": offset.left, 
@@ -39,13 +65,231 @@ dtable.hide_form = function($parent)
 dtable.get_data_rows = function($table)
 {
     return $table.find("tr").not(".form_row").not(":has(th)");
-}
+};
 dtable.get_row_id = function($table, $row)
 {
     return dtable.get_data_rows($table).index($row);
+};
+dtable.get_call = function($form)
+{
+	return $form.find("input[name=call]").val();
+};
+//Lock actuall page
+dtable.lock = function()
+{
+  jQuery.post(DOKU_BASE + 'lib/exe/ajax.php', 
+  {
+      'call': 'dtable_page_lock',
+      'page': JSINFO['id'],
+  },function() { dtable.page_locked = 1 });
+};
+dtable.unlock = function()
+{
+  if(dtable.page_locked == 1)
+  {
+      jQuery.post(DOKU_BASE + 'lib/exe/ajax.php', 
+      {
+	  'call': 'dtable_page_unlock',
+	  'page': JSINFO['id'],
+      },function() { dtable.page_locked = 0 });
+  }
+};
+dtable.panlock_switch = function(state)
+{
+    if(state == undefined)
+	state = 'hide';
+
+
+    if(state == 'panlock')
+    {
+	jQuery(".dtable .panunlock").hide();
+	jQuery(".dtable .panlock").show();
+    } else if(state == 'panunlock')
+    {
+	jQuery(".dtable .panlock").hide();
+	jQuery(".dtable .panunlock").show();
+    } else
+    {
+	jQuery(".dtable .panlock").hide();
+	jQuery(".dtable .panunlock").hide();
+    }
+};
+
+dtable.lock_seeker = function(nolock, lock)
+{
+  jQuery.post(DOKU_BASE + 'lib/exe/ajax.php', 
+  {
+      'call': 'dtable_is_page_locked',
+      'page': JSINFO['id'],
+  }, function(data)
+     {
+	 var res = jQuery.parseJSON(data);
+
+	 dtable.lock_expires = res.time_left;
+
+	 if(res.locked === 1)
+	 {
+	     if(dtable.lock_state == 2)
+      		lock();
+
+	    jQuery(".dtable .panlock .who").text(res.who);
+	    dtable.update_lock_timer(dtable.lock_expires);
+	    dtable.panlock_switch('panlock');
+
+
+	    dtable.lock_state = 1;
+
+	 } else
+	 {
+	    dtable.panlock_switch('hide');
+	    if(dtable.lock_state === 0)
+		nolock();
+	    else if(dtable.lock_state === 1)
+	    {
+		dtable.panlock_switch('panunlock');
+		dtable.clear_all_intervals();
+	    }
+
+	    dtable.lock_state = 2;
+
+
+	    //refresh lock if user do something
+	    var form_val_str = '';
+	    jQuery('.dtable .form_row').find('textarea, input').each(function() {
+		form_val_str += jQuery(this).val();
+	    });
+	    if(dtable.pageX != dtable.prev_pageX || dtable.pageY != dtable.prev_pageY || dtable.prev_val != form_val_str)
+	    {
+		dtable.prev_pageX = dtable.pageX;
+		dtable.prev_pageY = dtable.pageY
+		dtable.prev_val = form_val_str;
+		dtable.lock();
+	    }
+	 }
+
+     });
+};
+dtable.update_lock_timer = function(seconds)
+{
+    var date = new Date();
+    date.setSeconds(date.getSeconds()+seconds);
+    jQuery(".dtable .panlock .time_left").text(date.toLocaleString());
+};
+dtable.unlock_dtable = function()
+{
+
+    var $row = dtable.get_data_rows(jQuery(".dtable"));
+    var $context_menu = jQuery("#dtable_context_menu");
+
+    dtable.lock();
+
+   //track mouse in order to check if user do somenhing
+   jQuery(document).bind('mousemove', function(e){
+       dtable.pageX = e.pageX;
+       dtable.pageY = e.pageY;
+   }); 
+
+    jQuery("#dtable_context_menu a").live("click", contex_handler);
+
+
+    $row.bind("contextmenu", dtable.row_mousedown);
+
+    jQuery(document).bind("mouseup", function(e) {
+       if (e.which == 1) { $context_menu.hide(); }
+    });
+
+
+    //This was previously at the bottom of init function
+    jQuery(".dtable .form_row").dblclick(function(e) {
+	e.stopPropagation();
+    });
+
+    jQuery("#"+dtable.toolbar_id).dblclick(function(e) {
+	e.stopPropagation();
+    });
+
+    jQuery(document).dblclick(function(e){
+	    //sent form only once
+	    if(dtable.form_processing == false)
+	    {
+		//$context_menu.hide();
+		if(jQuery(".dtable .form_row").find(":visible").length > 0)
+		    jQuery(".dtable").submit();
+	    }
+    });
 }
+dtable.lock_dtable = function()
+{
+    var $row = dtable.get_data_rows(jQuery(".dtable"));
+
+    jQuery(document).unbind('mousemove');
+    $row.unbind('contextmenu');
+    
+    jQuery("#dtable_context_menu").hide();
+};
+
+dtable.row_mousedown = function(e) {
+    var $this_row = jQuery(this);
+    var $context_menu = jQuery("#dtable_context_menu");
+
+    var offsetX = e.pageX + 1;
+    var offsetY = e.pageY + 1;
+
+    $context_menu.show();
+    $context_menu.css('top',offsetY);
+    $context_menu.css('left',offsetX);
+
+    dtable.row = $this_row;
+    e.preventDefault();
+
+};
+dtable.clear_all_intervals = function()
+{
+    for( i in dtable.intervals)
+    {
+	clearInterval(dtable.intervals[i]);
+    }
+};
+
 dtable.init = function()
 {
+//create panlock elm
+jQuery('<div class="panlock notify">').html(JSINFO['lang']['lock_notify']).hide().prependTo(".dtable");
+
+//create panunlock elm
+jQuery('<div class="panunlock notify">').html(JSINFO['lang']['unlock_notify']).hide().prependTo(".dtable");
+
+
+//update lock expires
+dtable.intervals.push(setInterval(function()
+{
+    dtable.lock_expires -= 1;
+    if(dtable.lock_expires <= -1)
+	return;
+    
+    if(dtable.lock_expires === 0)
+    {
+	//we had own lock
+	if(dtable.page_locked == 1)
+	{
+	    //clear all intervals
+	    dtable.clear_all_intervals();
+
+	    var $forms = jQuery('.dtable .form_row:visible').closest('form');
+	    $forms.submit();
+
+	    //after submitting form
+	    dtable.lock_dtable();
+	    dtable.panlock_switch('panunlock');
+	} else 
+	{
+	    //unblock us if someones lock expires
+	    dtable.lock_seeker();
+	}
+    }
+    dtable.update_lock_timer(dtable.lock_expires);
+}, 1000));
+
 
 //create form
 
@@ -66,25 +310,34 @@ jQuery(".dtable textarea").first().attr("id", dtable.textarea_id);
 
 initToolbar(dtable.toolbar_id,dtable.textarea_id,toolbar);
 
-var $menu_item = jQuery("#dtable_context_menu");
+//create contextMenu
+
+var context_menus = ['insert_before', 'insert_after', 'edit', 'remove'];
+
+var $context_menu = jQuery('<ul id="dtable_context_menu">').prependTo("body");
+
+
+for(item_index in context_menus)
+{
+    var item = context_menus[item_index];
+    jQuery('<li class="'+item+'">').html('<a href="#'+item+'">'+JSINFO['lang'][item]).appendTo($context_menu);
+}
+$context_menu.find("li.edit").addClass("separator");
+
+
 
 var $row = dtable.get_data_rows(jQuery(".dtable"));
-
-$menu_item.appendTo("body");
-$row.live("contextmenu",function(e){
-		return false;
-});
 
 
 contex_handler = function(e) {
     e.preventDefault();
 
     $this_row = dtable.row;
-    dtable.id = $this_row.parents(".dtable").attr("id");
+    dtable.id = $this_row.closest(".dtable").attr("id");
 
     var row_id = $this_row.attr("id");
-    var $table = $this_row.parents("table");
-    var $form = $this_row.parents("form");
+    var $table = $this_row.closest("table");
+    var $form = $this_row.closest("form");
 
     var table = $form.attr("id");
     table = table.replace(/^dtable_/, '');
@@ -97,7 +350,7 @@ contex_handler = function(e) {
 	case '#remove':
 	  jQuery.post(DOKU_BASE + 'lib/exe/ajax.php', 
 	  {
-	      'call': 'dtable',
+	      'call': dtable.get_call($form),
 	      'table': table,
 	      'remove': dtable.get_row_id($table, $this_row)
 	  },
@@ -125,7 +378,7 @@ contex_handler = function(e) {
 
 	      jQuery.post(DOKU_BASE + 'lib/exe/ajax.php', 
 	      {
-		  'call': 'dtable',
+		  'call': dtable.get_call($form),
 		  'table': table,
 		  'get': dtable.get_row_id($table, $this_row)
 	      },
@@ -179,36 +432,15 @@ contex_handler = function(e) {
 		dtable.show_form($table);  
 	break;
     }
-    //jQuery("#dtable_context_menu a").unbind();
-    $menu_item.hide();
+    $context_menu.hide();
 };
 
-jQuery("#dtable_context_menu a").live("click", contex_handler);
+dtable.lock_seeker(dtable.unlock_dtable, dtable.lock_dtable);
 
-var f_row_mousedown = function(e) {
-    var $this_row = jQuery(this);
-    var offsetX = e.pageX + 1;
-    var offsetY = e.pageY + 1;
+dtable.intervals.push(setInterval(function() {
+    dtable.lock_seeker(dtable.unlock_dtable, dtable.lock_dtable);
+}, dtable.lock_seeker_timeout));
 
-    $menu_item.show();
-    $menu_item.css('top',offsetY);
-    $menu_item.css('left',offsetX);
-
-    dtable.row = $this_row;
-    e.preventDefault();
-
-};
-
-$row.bind("contextmenu", f_row_mousedown);
-
-$menu_item.click(function(e) {
-    e.preventDefault();
-});
-
-/*jQuery(document).mousedown(function(e) {
-    if(e.button !== 2) 
-	$menu_item.hide();
-});*/
 
 //Add is set on id of element after we want to add new element if set to -1 we adding element at the top of the table
 jQuery(".dtable").submit(
@@ -240,7 +472,11 @@ jQuery(".dtable").submit(
 			      $new_elm.append("<td>"+res.fileds[f]+"</td>");
 			  }
 
-			  $new_elm.bind("contextmenu", f_row_mousedown);
+			  if(dtable.lock_state != 2)
+			      $new_elm.bind("contextmenu", dtable.row_mousedown);
+
+			  //remove old element
+			  $form.find("tr:hidden").remove();
 
 			  dtable.hide_form($form);
 			  $form.find(".form_row input, textarea").val('');
@@ -262,11 +498,12 @@ jQuery(".dtable").submit(
 	});
 jQuery(".dtable textarea").bind('focus', function(e) {
 
-    dtable.id = jQuery(this).parents(".dtable").attr("id");
+    dtable.id = jQuery(this).closest(".dtable").attr("id");
 
     //If I won't do it, initToolbar will not work.
     //jQuery("#dtable_form textarea:first-child").attr("id", "");
     //jQuery(this).attr("id", dtable.textarea_id);
+    
     if(jQuery(this).attr("id") != dtable.textarea_id)
     {
 	$marked_textarea = jQuery("#"+dtable.textarea_id);
@@ -303,26 +540,6 @@ jQuery(".dtable textarea").bind('focus', function(e) {
     }
 
 });
-$menu_item.dblclick(function(e) {
-    e.stopPropagation();
-});
-jQuery("table.dynamyc .form_row").dblclick(function(e) {
-    e.stopPropagation();
-});
-
-jQuery("#"+dtable.toolbar_id).dblclick(function(e) {
-    e.stopPropagation();
-});
-
-jQuery(document).dblclick(function(e){
-	//sent form only once
-	if(dtable.form_processing == false)
-	{
-	    $menu_item.hide();
-	    if(jQuery(".dtable .form_row").find(":visible").length > 0)
-		jQuery(".dtable").submit();
-	}
-});
 
 
 
@@ -330,5 +547,8 @@ jQuery(document).dblclick(function(e){
 
 jQuery(document).ready(function()
 {
-    dtable.init()
+    //check permission and if any dtable exists
+    if(JSINFO['write'] === true && jQuery(".dtable").length > 0)
+	dtable.init()
 });
+jQuery(window).unload( function () { dtable.unlock(); } );
