@@ -21,39 +21,39 @@ class helper_plugin_dtable extends dokuwiki_plugin
     function getMethods(){
       $result = array();
       $result[] = array(
-	'name'   => 'md5_array',
-	'desc'   => 'returns array with md5 of each value',
-	'params' => array('array' => 'array'),
-	'return' => array('md5_array' => 'array'),
-      );
-      $result[] = array(
 	'name'   => 'error',
 	'desc'   => 'handle error',
 	'params' => array('code' => 'string', 'json' => 'boolen'),
 	'return' => array('msg' => 'string'),
       );
-    }
-    function md5_array($array)
-    {
-	if(count($array) == 0)
-	    return $array;
-
-	$md5_array = array();
-	foreach($array as $k => $v)
-	{
-	    $md5_array[$k] = md5($v);
-	}
-	return $md5_array;	
+      $result[] = array(
+	'name'   => 'line_nr',
+	'desc'   => 'Determine line nr in given file using $pos in input.',
+	'params' => array('file_path' => 'string', 'pos' => 'int'),
+	'return' => array('line_nr' => 'int'),
+      );
     }
     function error($code, $json=false)
     {
 	if($json == true)
 	{
-	    return json_encode(array('type' => 'error', 'msg' => $this->getLang($code)));
+	    $json = new JSON();
+	    return $json->encode(array('type' => 'error', 'msg' => $this->getLang($code)));
 	} else
 	{
 	    return $this->getLang($code);
 	}
+    }
+    function line_nr($file_path, $pos)
+    {
+	$file_cont = io_readFile($file_path);
+	$line_nr = 0;
+	for($i=0;$i<=$pos;$i++)
+	{
+	    if($file_cont[$i] == "\n")
+		$line_nr++;
+	}
+	return $line_nr;
     }
 }
 

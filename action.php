@@ -87,7 +87,36 @@ class action_plugin_dtable extends DokuWiki_Action_Plugin {
 	case 'dtable':
 	    $event->preventDefault();
 	    $event->stopPropagation();
+
 	    $dtable =& plugin_load('helper', 'dtable');
+
+	    $json = new JSON();
+
+	    if(isset($_POST['remove']))
+	    {
+		list($dtable_start_line, $dtable_page_id) = explode('_', $_POST['table'], 2);
+		$file = wikiFN( $dtable_page_id );
+		if( ! @file_exists( $file  ) )
+		{
+		    echo $json->encode( array('type' => 'error', 'msg' => 'This page does not exist.') );
+		    exit(1);
+		}
+		$page_lines = explode( "\n", io_readFile( $file ) );
+
+		$table_line = (int) $_POST['remove'];
+
+		$line_to_remove = $dtable_start_line + $table_line;
+
+		$removed_line = $page_lines[ $line_to_remove ]; 
+
+		unset( $page_lines[ $line_to_remove ] );
+
+		$new_cont = implode( "\n", $page_lines );
+
+		saveWikiText($dtable_page_id, $new_cont, $this->getLang('summary_remove').' '.$removed_line);
+
+		echo $json->encode( array('type' => 'success') );
+	    }
 	break;
 	case 'dtable_page_lock':
 	    $event->preventDefault();

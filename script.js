@@ -291,8 +291,6 @@ dtable.intervals.push(setInterval(function()
 }, 1000));
 
 
-//create form
-
 $toolbar = jQuery("body").append('<div id="'+dtable.toolbar_id+'" style="position:absolute;display:none;z-index:999"></div>');
 
 jQuery.ui.dialog.prototype._oldcreate = jQuery.ui.dialog.prototype._create;

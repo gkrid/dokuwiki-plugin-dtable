@@ -27,13 +27,13 @@ class syntax_plugin_dtable extends DokuWiki_Syntax_Plugin {
     function getAllowedTypes() {return array('container','formatting','substition');} 
 
     function connectTo($mode) { $this->Lexer->addEntryPattern('<dtable>(?=.*</dtable>)',$mode,'plugin_dtable'); }
-    function postConnect() { $this->Lexer->addExitPattern('</dtable>','plugin_dtable_standalone'); }
+    function postConnect() { $this->Lexer->addExitPattern('</dtable>','plugin_dtable'); }
 
 
     function handle($match, $state, $pos, &$handler) {
         switch ($state) {
           case DOKU_LEXER_ENTER :
-                return array($state, '');
+                return array($state, $pos);
  
           case DOKU_LEXER_UNMATCHED :  return array($state, $match);
           case DOKU_LEXER_EXIT :       return array($state, '');
@@ -42,37 +42,39 @@ class syntax_plugin_dtable extends DokuWiki_Syntax_Plugin {
     }
 
     function render($mode, &$renderer, $data) {
-	global $ID;
+	global $ID, $INFO, $JSINFO;
 	if($mode == 'xhtml')
 	{
 	   list($state,$match) = $data;
 	   switch ($state) {
 	     case DOKU_LEXER_ENTER :     
 
-		$MAX_TABLE_WIDTH = $this->getConf('max_table_width');
+		if (auth_quickaclcheck($ID) >= AUTH_EDIT) 
+		{
+		    $dtable =& plugin_load('helper', 'dtable');
 
-		//$INPUT_WIDTH = floor(($MAX_TABLE_WIDTH-$SUBMIT_WIDTH)/count($NAGLOWKI))-5;//border około 5px;
+		    //$match contains charter where dtable starts. 
+		    //<dtable> is first line
+		    $start_line = $dtable->line_nr($INFO['filepath'], $match) + 1;
+		    //lock for first row 
+		    $file_cont = explode("\n", io_readFile($INFO['filepath']));
+		    while( strpos( $file_cont[ $start_line ], '|' ) !== 0 )
+			$start_line++;
 
-		$dtable =& plugin_load('helper', 'dtable');
+		    $renderer->doc .= '<form class="dtable" id="dtable_'.$start_line.'_'.$ID.'" action="'.$DOKU_BASE.'lib/exe/ajax.php" method="post">';
+		    $renderer->doc .= '<input type="hidden" value="dtable" name="call">';
 
-
-	    $naglowki_md5 = $dtable->md5_array($NAGLOWKI);
-
-	    if (auth_quickaclcheck($ID) >= AUTH_EDIT) 
-	    {
-		$renderer->doc .= '<form class="dtable" id="dtable_form_'.$NAZWA_BAZY.rand(1,1000000).'" action="'.$DOKU_BASE.'lib/exe/ajax.php" method="post">';
-
-	    }
+		}
 	    break;
 
-	     case DOKU_LEXER_UNMATCHED :  $renderer->doc .= $renderer->_xmlEntities($match); break;
-	     case DOKU_LEXER_EXIT :     
+	    case DOKU_LEXER_UNMATCHED :  $renderer->doc .= $renderer->_xmlEntities($match); break;
+	    case DOKU_LEXER_EXIT :     
 		if (auth_quickaclcheck($ID) >= AUTH_EDIT) 
 		    $renderer->doc .= "</form>"; 
 		
-		break;
+	    break;
 	   }
-	    return true;
+	   return true;
 	}
         return false;
     }
