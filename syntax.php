@@ -57,11 +57,14 @@ class syntax_plugin_dtable extends DokuWiki_Syntax_Plugin {
 		    //<dtable> is first line
 		    $start_line = $dtable->line_nr($INFO['filepath'], $match) + 1;
 		    //lock for first row 
-		    $file_cont = explode("\n", io_readFile($INFO['filepath']));
-		    while( strpos( $file_cont[ $start_line ], '|' ) !== 0 )
-			$start_line++;
+		    $file_cont = explode("\n", io_readWikiPage($INFO['filepath'], $ID));
 
-		    $renderer->doc .= '<form class="dtable" id="dtable_'.$start_line.'_'.$ID.'" action="'.$DOKU_BASE.'lib/exe/ajax.php" method="post">';
+		    while( strpos( $file_cont[ $start_line ], '|' ) !== 0 )
+		    {
+			$start_line++;
+		    }
+
+		    $renderer->doc .= '<form class="dtable dynamic_form" id="dtable_'.$start_line.'_'.$ID.'" action="'.$DOKU_BASE.'lib/exe/ajax.php" method="post">';
 		    $renderer->doc .= '<input type="hidden" value="dtable" name="call">';
 
 		}

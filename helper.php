@@ -32,6 +32,12 @@ class helper_plugin_dtable extends dokuwiki_plugin
 	'params' => array('file_path' => 'string', 'pos' => 'int'),
 	'return' => array('line_nr' => 'int'),
       );
+      $result[] = array(
+	'name'   => 'rowspan_crawler',
+	'desc'   => 'Check if there are some lines that should be updated due to rowspan.',
+	'params' => array('lines_to_crawl' => 'array', 'start_line' => 'int'),
+	'return' => array('lines_to_change' => 'array'),
+      );
     }
     function error($code, $json=false)
     {
@@ -55,5 +61,139 @@ class helper_plugin_dtable extends dokuwiki_plugin
 	}
 	return $line_nr;
     }
+    function rows_count($line)
+    {
+	return substr_count($line, '|') - 1;
+    }
+    function rows($row)
+    {
+	if(strpos($row, '|') !== 0)
+	    return false;
+
+	$row = substr( $row, 0, -1 );
+	$row = substr( $row, 1 );
+	return explode('|', $row);
+    }
+    function has_triple_colon($row, $col_nr)
+    {
+
+	if( ($row_array = helper_plugin_dtable::rows($row) ) === false )
+	    return false;
+
+	if($row_array[$col_nr] == ':::')
+	    return true;
+	else
+	    return false;
+    }
+    function get_rowspans($start_line_str, $table_line, $dtable_start_line, $page_lines)
+    {
+	$table_rows =  helper_plugin_dtable::rows_count($start_line_str);
+	$rowspans = array();
+
+
+	for( $j = 0; $j < $table_rows; $j++ )
+	{
+	    if( helper_plugin_dtable::has_triple_colon($start_line_str, $j) )
+	    {
+		$rowspan_val = 1;
+		$i = $table_line - 1;
+		$line = $page_lines[ $i + $dtable_start_line ];
+		while( helper_plugin_dtable::has_triple_colon($line, $j) )
+		{
+		    $i--;
+		    $rowspan_val++;
+
+		    $line = $page_lines[ $i + $dtable_start_line ];
+		}
+		//eq can be negative becouse $dtable_start_line is 0 for first row that isn't th
+		$eq = $i;
+
+		$i = $table_line + 1;
+		$line = $page_lines[ $i + $dtable_start_line ];
+
+
+		while( helper_plugin_dtable::has_triple_colon($line, $j) )
+		{
+		    $i++;
+		    $rowspan_val++;
+		    $line = $page_lines[ $i + $dtable_start_line ];
+		}
+		$rowspans[] = array('tr' => $eq, 'td' => $j, 'val' => $rowspan_val);
+
+	    } else
+	    {
+		$next_line = $page_lines[ $table_line + 1 +$dtable_start_line ];
+		if( helper_plugin_dtable::has_triple_colon($next_line, $j) )
+		{
+		    //$eq = $table_line - 1;
+		    
+		    $rowspan_val = 2;
+
+		    $i = $table_line - 1;
+		    $line = $page_lines[ $i + $dtable_start_line ];
+		    while( helper_plugin_dtable::has_triple_colon($line, $j) )
+		    {
+			$i--;
+			$rowspan_val++;
+
+			$line = $page_lines[ $i + $dtable_start_line ];
+		    }
+		    //eq can be negative becouse $dtable_start_line is 0 for first row that isn't th
+		    $eq = $i;
+
+		    $i = $table_line + 2;
+
+		    $line = $page_lines[ $i + $dtable_start_line ];
+		    while( helper_plugin_dtable::has_triple_colon($line, $j) )
+		    {
+			$i++;
+			$rowspan_val++;
+			
+			$line = $page_lines[ $i + $dtable_start_line ];
+		    }
+		    $rowspans[] = array('tr' => $eq, 'td' => $j, 'val' => $rowspan_val);
+		}
+	    }
+	}
+
+	for( $j = 0; $j < count( $rowspans ); $j++)
+	{
+	    if( $row = helper_plugin_dtable::rows($page_lines [ $rowspans[$j]['tr'] + $dtable_start_line ] ) )
+	    {
+		for( $i = 0; $i < $rowspans[$j]['td']; $i++ )
+		{
+		    if( $row[ $i ] == ':::' )
+		    {
+			$rowspans[$j]['td']--;
+		    }
+		}
+	    }
+	}
+	return $rowspans;
+    }
+/*    function remove_rowspan_crawler( $lines_to_crawl, $start_line )
+    {
+	if($start_line == 0)
+	{
+	    $down_row = $lines_to_crawl[ $start_line ];
+	    while( helper_plugin_dtable::has_rowspan( $down_row ) )
+	    {
+		$lines_to_change[$start_line] = $down_row;
+		$start_line++;
+		$down_row = $lines_to_crawl[ $start_line ];
+	    }
+	} else
+	{
+	    $up_row = $lines_to_crawl[ $start_line - 1];
+	    $down_row = $lines_to_crawl[ $start_line ];
+
+	    if( helper_plugin_dtable::is_row( $this ) ) 
+	    {
+		if( helper_plugin_dtable::has_rowspan( $this ) )
+		{
+		}
+	    }
+	}
+    } */
 }
 

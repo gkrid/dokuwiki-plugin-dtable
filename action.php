@@ -115,7 +115,8 @@ class action_plugin_dtable extends DokuWiki_Action_Plugin {
 
 		saveWikiText($dtable_page_id, $new_cont, $this->getLang('summary_remove').' '.$removed_line);
 
-		echo $json->encode( array('type' => 'success') );
+
+		echo $json->encode( array('type' => 'alternate_success', 'rowspans' =>  $dtable->get_rowspans($removed_line, $table_line, $dtable_start_line, $page_lines) ) );
 	    }
 	break;
 	case 'dtable_page_lock':
