@@ -32,12 +32,6 @@ class helper_plugin_dtable extends dokuwiki_plugin
 	'params' => array('file_path' => 'string', 'pos' => 'int'),
 	'return' => array('line_nr' => 'int'),
       );
-      $result[] = array(
-	'name'   => 'rowspan_crawler',
-	'desc'   => 'Check if there are some lines that should be updated due to rowspan.',
-	'params' => array('lines_to_crawl' => 'array', 'start_line' => 'int'),
-	'return' => array('lines_to_change' => 'array'),
-      );
     }
     function error($code, $json=false)
     {
@@ -108,7 +102,7 @@ class helper_plugin_dtable extends dokuwiki_plugin
 		//eq can be negative becouse $dtable_start_line is 0 for first row that isn't th
 		$eq = $i;
 
-		$i = $table_line + 1;
+		$i = $table_line ;//+1
 		$line = $page_lines[ $i + $dtable_start_line ];
 
 
@@ -171,29 +165,34 @@ class helper_plugin_dtable extends dokuwiki_plugin
 	}
 	return $rowspans;
     }
-/*    function remove_rowspan_crawler( $lines_to_crawl, $start_line )
+    function format_row($array_line)
     {
-	if($start_line == 0)
-	{
-	    $down_row = $lines_to_crawl[ $start_line ];
-	    while( helper_plugin_dtable::has_rowspan( $down_row ) )
-	    {
-		$lines_to_change[$start_line] = $down_row;
-		$start_line++;
-		$down_row = $lines_to_crawl[ $start_line ];
-	    }
-	} else
-	{
-	    $up_row = $lines_to_crawl[ $start_line - 1];
-	    $down_row = $lines_to_crawl[ $start_line ];
+	$line = implode('|', $array_line);
+	$line = '|'.$line.'|';
 
-	    if( helper_plugin_dtable::is_row( $this ) ) 
-	    {
-		if( helper_plugin_dtable::has_rowspan( $this ) )
-		{
-		}
-	    }
+	return $line;
+    }
+    function parse_line($line)
+    {
+	$rows = helper_plugin_dtable::rows($line);
+
+	$cells = array();
+	foreach($rows as $row)
+	{
+	    if($row != ':::')
+		$cells[] = $row;
 	}
-    } */
+
+	$line = helper_plugin_dtable::format_row($cells);
+
+	$info = array();
+	$html = p_render('xhtml',p_get_instructions($line),$info);
+
+	$maches = array();
+
+	preg_match('/<tr.*?>\s*(.*?)\s*<\/tr>/', $html, $maches);
+
+	return $maches[1];
+    }
 }
 

@@ -47,6 +47,12 @@ dtable.show_form = function($parent)
     var $form = $parent.find(".form_row"); 
     var $toolbar = jQuery("#"+dtable.toolbar_id);
 
+    //backwards contability with 
+    if($form.closest('form').hasClass("dynamic_form"))
+    {
+	//there will be code which will handle rowspan in the futhure
+    }
+
     //display fix jquery 1.6 bug
     $form.css("display", "table-row");
 
@@ -269,6 +275,12 @@ dtable.change_rows = function($table, rowspans)
       }
 }
 
+dtable.get_table_id = function($form)
+{
+    var table = $form.attr("id");
+    return table.replace(/^dtable_/, '');
+};
+
 dtable.init = function()
 {
 //create panlock elm
@@ -280,6 +292,11 @@ jQuery('<div class="panunlock notify">').html(JSINFO['lang']['unlock_notify']).h
 //create form
 jQuery(".dtable.dynamic_form").each(function()
 {
+    //append dtable_action
+    jQuery(this).append('<input type="hidden" class="dtable_action" name="add" value="-1">');
+    //append table name
+    jQuery(this).append('<input type="hidden" name="table" value="'+ dtable.get_table_id( jQuery(this) ) +'">');
+    
     var td_len = jQuery( this ).find("tr:first").find("td, th").length;
 
     $form_row = jQuery('<tr class="form_row">').hide().appendTo( jQuery( this ).find("table") );
@@ -372,8 +389,8 @@ contex_handler = function(e) {
     var $table = $this_row.closest("table");
     var $form = $this_row.closest("form");
 
-    var table = $form.attr("id");
-    table = table.replace(/^dtable_/, '');
+
+    var table = dtable.get_table_id($form);
 
     //hide current form
     var ev = jQuery(e.currentTarget).attr("href");
@@ -540,6 +557,7 @@ jQuery(".dtable").submit(
 
 		      } else if(res.type == 'alternate_success')
 		      {
+			  console.log(res);
 			  if( res.new_row !== undefined )
 			  {
 			      $new_elm = jQuery('<tr>');
@@ -550,6 +568,11 @@ jQuery(".dtable").submit(
 				  $new_elm.bind("contextmenu", dtable.row_mousedown);
 			  }
 
+			  //remove old element
+			  $form.find("tr:hidden").remove();
+			  dtable.hide_form($form);
+			  $form.find(".form_row input, textarea").val('');
+			  
 			  var $table = $form.find("table");
 			  dtable.change_rows($table, res.rowspans);
 

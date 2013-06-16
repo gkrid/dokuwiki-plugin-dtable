@@ -11,4 +11,5 @@ $lang['lock_notify'] = 'This page is currently locked for editing by %u. You hav
 $lang['unlock_notify'] = 'Lock expired. Refresh the page to be able modify table.';
 
 $lang['summary_remove'] = '[dtable]row removed:';
-
+$lang['summary_add'] = '[dtable]new row added:';
+$lang['summary_edit'] = '[dtable]old row: %o changed to: %n';
