@@ -555,7 +555,6 @@ jQuery(".dtable").submit(
 
 		      } else if(res.type == 'alternate_success')
 		      {
-			  console.log(res);
 			  if( res.new_row !== undefined )
 			  {
 			      $new_elm = jQuery('<tr>');
