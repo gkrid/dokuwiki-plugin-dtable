@@ -169,7 +169,7 @@ dtable.lock_seeker = function(nolock, lock)
 	    if(dtable.pageX != dtable.prev_pageX || dtable.pageY != dtable.prev_pageY || dtable.prev_val != form_val_str)
 	    {
 		dtable.prev_pageX = dtable.pageX;
-		dtable.prev_pageY = dtable.pageY
+		dtable.prev_pageY = dtable.pageY;
 		dtable.prev_val = form_val_str;
 		dtable.lock();
 	    }
@@ -225,7 +225,7 @@ dtable.unlock_dtable = function()
 		    jQuery(".dtable").submit();
 	    }
     });
-}
+};
 dtable.lock_dtable = function()
 {
     var $row = dtable.get_data_rows(jQuery(".dtable"));
@@ -266,14 +266,14 @@ dtable.change_rows = function($table, rowspans)
 	  var rowspan = rowspans[ row ];
 
 	  var $cell = $table.find('tr').eq(parseInt( rowspan.tr ) + 1)
-			    .find('td, th').eq( parseInt( rowspan.td) )
+			    .find('td, th').eq( parseInt( rowspan.td) );
 
 	      
 	  $cell.attr("rowspan", rowspan.val);
 
 
       }
-}
+};
 
 dtable.get_table_id = function($form)
 {
@@ -323,7 +323,7 @@ dtable.intervals.push(setInterval(function()
 	    dtable.clear_all_intervals();
 
 	    //page is locked
-	    dtable.page_locked = 0
+	    dtable.page_locked = 0;
 
 	    var $forms = jQuery('.dtable .form_row:visible').closest('form');
 	    $forms.submit();
