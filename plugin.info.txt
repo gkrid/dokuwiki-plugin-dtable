@@ -1,7 +1,7 @@
 base dtable
 author Szymon Olewniczak
 email szymon.olewniczak@rid.pl
-date 2013-03-25
+date 2013-09-16
 name dtable
-desc Add a dynamic table to your page which you can manage by a simple GUI
+desc This plugin may change your boring dokuwiki tables to dynamic tables that can be managed using simle GUI.
 url http://www.dokuwiki.org/plugin:dtable
