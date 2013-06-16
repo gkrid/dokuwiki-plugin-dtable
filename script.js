@@ -354,9 +354,7 @@ jQuery.extend(jQuery.ui.dialog.prototype, {
 });
 
 //If I won't do it, initToolbar will not work.
-jQuery("<textarea>").hide().attr("id", dtable.textarea_id).appendTo("body");
-
-//jQuery(".dtable textarea").first().attr("id", dtable.textarea_id);
+jQuery(".dtable textarea").first().attr("id", dtable.textarea_id);
 
 initToolbar(dtable.toolbar_id,dtable.textarea_id,toolbar);
 

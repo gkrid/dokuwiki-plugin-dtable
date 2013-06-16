@@ -66,6 +66,9 @@ class helper_plugin_dtable extends dokuwiki_plugin
 
 	$row = substr( $row, 0, -1 );
 	$row = substr( $row, 1 );
+
+	$row = str_replace('\\\\ ', "\n", $row);
+
 	return explode('|', $row);
     }
     function has_triple_colon($row, $col_nr)
@@ -170,6 +173,8 @@ class helper_plugin_dtable extends dokuwiki_plugin
 	$line = implode('|', $array_line);
 	$line = '|'.$line.'|';
 
+	$line = str_replace("\n", '\\\\ ', $line);
+
 	return $line;
     }
     function parse_line($line)
@@ -185,14 +190,15 @@ class helper_plugin_dtable extends dokuwiki_plugin
 
 	$line = helper_plugin_dtable::format_row($cells);
 
+
 	$info = array();
 	$html = p_render('xhtml',p_get_instructions($line),$info);
 
 	$maches = array();
 
-	preg_match('/<tr.*?>\s*(.*?)\s*<\/tr>/', $html, $maches);
+	preg_match('/<tr.*?>(.*?)<\/tr>/si', $html, $maches);
 
-	return $maches[1];
+	return trim($maches[1]);
     }
 }
 
