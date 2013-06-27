@@ -66,7 +66,6 @@ class helper_plugin_dtable extends dokuwiki_plugin
 	$row = substr( $row, 0, -1 );
 	$row = substr( $row, 1 );
 
-	$row = str_replace('\\\\ ', "\n", $row);
 
 	return explode('|', $row);*/
 
@@ -110,7 +109,9 @@ class helper_plugin_dtable extends dokuwiki_plugin
 	$i = 3;
 	while( isset( $instr[$i] ) && $instr[$i][0] == 'tablecell_open' )
 	{
-	    $table_cells[] = $instr[$i+1][1][0];
+	    $cell = $instr[$i+1][1][0];
+	    $cell = str_replace('\\\\ ', "\n", $cell);
+	    $table_cells[] = $cell;
 	    $i += 3;
 	}
 
