@@ -19,6 +19,8 @@ require_once DOKU_PLUGIN.'syntax.php';
 class helper_plugin_dtable extends dokuwiki_plugin
 {
 
+    static $ID;
+
     function getMethods(){
       $result = array();
       $result[] = array(
@@ -56,8 +58,7 @@ class helper_plugin_dtable extends dokuwiki_plugin
 	}
 	return $line_nr;
     }
-    //bugged
-    function rows($row, $id)
+    function rows($row, $get_spans=false)
     {
 	/*if(strpos($row, '|') !== 0)
 	    return false;
@@ -69,63 +70,59 @@ class helper_plugin_dtable extends dokuwiki_plugin
 
 	return explode('|', $row);*/
 
-	$lexer_rules = p_get_metadata($id, 'plugin_dtable_lexer_rules');
+	$lexer_rules = p_get_metadata(helper_plugin_dtable::$ID, 'plugin_dtable_lexer_rules');
 
 	$Parser = new Doku_Parser();
 
-	$Parser->Handler = new Doku_Handler();
+	require_once 'dtable_handler.php';
+
+	$Parser->Handler = new Dtable_Doku_Handler();
+
 	$Parser->Lexer = new Doku_Lexer( $Parser->Handler, 'base', TRUE );
+
+
 
 	foreach( $lexer_rules['addEntryPattern'] as $pattern )
 	{
-	    if( $pattern[2] == 'table' )
-		$mode = 'table';
-	    else
-		$mode = 'base';
-
-	    $Parser->Lexer->addEntryPattern($pattern[0], 'base', $mode);
+	    $Parser->Lexer->addEntryPattern($pattern[0], 'table', 'copy');
 	}
 	foreach( $lexer_rules['addPattern'] as $pattern )
 	{
-	    if( $pattern[1] == 'table' )
-		$mode = 'table';
-	    else
-		$mode = 'base';
-
-	    $Parser->Lexer->addPattern($pattern[0], $mode);
+	    $Parser->Lexer->addPattern($pattern[0], 'copy');
 	}
 	foreach( $lexer_rules['addExitPattern'] as $pattern )
 	{
-	    if( $pattern[1] == 'table' )
-		$mode = 'table';
-	    else
-		$mode = 'base';
-
-	    $Parser->Lexer->addExitPattern($pattern[0], $mode);
+	    $Parser->Lexer->addExitPattern($pattern[0], 'copy');
 	}
 	foreach( $lexer_rules['addSpecialPattern'] as $pattern )
 	{
-	    if( $pattern[2] == 'table' )
-		$mode = 'table';
-	    else
-		$mode = 'base';
-
-	    $Parser->Lexer->addSpecialPattern($pattern[0], 'base', $mode);
+	    $Parser->Lexer->addSpecialPattern($pattern[0], 'table', 'copy');
 	}
-
-	//var_dump($Lexer);
-
 
 	$Parser->addMode('table', new Doku_Parser_Mode_table());
 
 	$instr = $Parser->parse($row);
-	dbglog($instr);
-	//return $instr;
+
+	$table_cells = array();
+	$span = array( 'row' => array() , 'cell' => array() );
+
+	//first table cell is 3 next 6 ...
+	$i = 3;
+	while( isset( $instr[$i] ) && $instr[$i][0] == 'tablecell_open' )
+	{
+	    $table_cells[] = $instr[$i+1][1][0];
+	    $i += 3;
+	}
+
+	if( $get_spans == true )
+	    return array( $table_cells, $span );
+	else
+	    return $table_cells;
     }
     function has_triple_colon($row, $col_nr)
     {
 
-	if( ($row_array = helper_plugin_dtable::rows($row) ) === false )
+	if(strpos($row, '|') !== 0)
 	    return false;
 
 	if($row_array[$col_nr] == ':::')

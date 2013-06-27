@@ -445,13 +445,16 @@ contex_handler = function(e) {
 	      function(data)
 	      {
 		  var res = jQuery.parseJSON(data);
+
+		  var rows = res[0];
+		  var spans = res[1];
 		  //!!!
 		  //var $form_elm = jQuery("#"+dtable.id+" .form td").find("input, textarea");
 		  var $form_elm = $table.find(".form_row").find("input, textarea");
 		  var i = 0;
-		  for(elm in res)
+		  for(elm in rows)
 		  {
-		      $form_elm.eq(i).val(res[elm]);
+		      $form_elm.eq(i).val(rows[elm]);
 		      i++;
 		  }
 		  $this_row.hide();

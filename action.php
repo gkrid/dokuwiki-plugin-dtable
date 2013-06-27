@@ -70,7 +70,7 @@ class action_plugin_dtable extends DokuWiki_Action_Plugin {
 	//$pluginlist = plugin_list($type);
 	//$plugin_files = array();
 	//get from plugincontroller.class.php 
-	//
+	
 	$doku_plugin_dir = opendir(DOKU_PLUGIN);
 	while (($plugin_dir = readdir($doku_plugin_dir)) !== false)
 	{
@@ -98,6 +98,98 @@ class action_plugin_dtable extends DokuWiki_Action_Plugin {
 
 	//Lexer rules
 	$lexer_rules = array('addEntryPattern' => array(), 'addPattern' => array(), 'addExitPattern' => array(), 'addSpecialPattern' => array() );
+
+	$modes = array('table', 'copy');
+	foreach($modes as $mode)
+	{
+	    //basic dokuwiki syntax:
+	    //strong
+	    $lexer_rules['addEntryPattern'][] = array('\*\*(?=.*\*\*)', $mode, 'copy');
+	    $lexer_rules['addExitPattern'][] = array('\*\*', 'copy');
+
+	    //emphasis
+	    $lexer_rules['addEntryPattern'][] = array('//(?=[^\x00]*[^:])', $mode, 'copy');
+	    $lexer_rules['addExitPattern'][] = array('//', 'copy');
+
+	    //underline
+	    $lexer_rules['addEntryPattern'][] = array('__(?=.*__)', $mode, 'copy');
+	    $lexer_rules['addExitPattern'][] = array('__', 'copy');
+
+	    //monospace
+	    $lexer_rules['addEntryPattern'][] = array('\x27\x27(?=.*\x27\x27)', $mode, 'copy');
+	    $lexer_rules['addExitPattern'][] = array('\x27\x27', 'copy');
+
+	    //subscript
+	    $lexer_rules['addEntryPattern'][] = array('<sub>(?=.*</sub>)', $mode, 'copy');
+	    $lexer_rules['addExitPattern'][] = array('</sub>', 'copy');
+
+	    //superscript
+	    $lexer_rules['addEntryPattern'][] = array('<sup>(?=.*</sup>)', $mode, 'copy');
+	    $lexer_rules['addExitPattern'][] = array('</sup>', 'copy');
+
+	    //deleted
+	    $lexer_rules['addEntryPattern'][] = array('<del>(?=.*</del>)', $mode, 'copy');
+	    $lexer_rules['addExitPattern'][] = array('</del>', 'copy');
+
+	    $lexer_rules['addEntryPattern'][] = array('<nowiki>(?=.*</nowiki>)',$mode,'copy');
+	    $lexer_rules['addEntryPattern'][] = array('%%(?=.*%%)',$mode,'copy');
+	    $lexer_rules['addExitPattern'][] = array('</nowiki>','unformatted');
+	    $lexer_rules['addExitPattern'][] = array('%%','unformattedalt');
+	    $lexer_rules['mapHandler'][] = array('unformattedalt','unformatted');
+	    $lexer_rules['addEntryPattern'][] = array('\x28\x28(?=.*\x29\x29)',$mode,'copy');
+	    $lexer_rules['addExitPattern'][] = array('\x29\x29','footnote');
+	    $lexer_rules['addEntryPattern'][] = array('<php>(?=.*</php>)',$mode,'copy');
+	    $lexer_rules['addEntryPattern'][] = array('<PHP>(?=.*</PHP>)',$mode,'copy');
+	    $lexer_rules['addExitPattern'][] = array('</php>','php');
+	    $lexer_rules['addExitPattern'][] = array('</PHP>','phpblock');
+	    $lexer_rules['addEntryPattern'][] = array('<html>(?=.*</html>)',$mode,'copy');
+	    $lexer_rules['addEntryPattern'][] = array('<HTML>(?=.*</HTML>)',$mode,'copy');
+	    $lexer_rules['addExitPattern'][] = array('</html>','html');
+	    $lexer_rules['addExitPattern'][] = array('</HTML>','htmlblock');
+	    $lexer_rules['addEntryPattern'][] = array('\n  (?![\*\-])',$mode,'copy');
+	    $lexer_rules['addEntryPattern'][] = array('\n\t(?![\*\-])',$mode,'copy');
+	    $lexer_rules['addPattern'][] = array('\n  ','preformatted');
+	    $lexer_rules['addPattern'][] = array('\n\t','preformatted');
+	    $lexer_rules['addExitPattern'][] = array('\n','preformatted');
+	    $lexer_rules['addEntryPattern'][] = array('<code(?=.*</code>)',$mode,'copy');
+	    $lexer_rules['addExitPattern'][] = array('</code>','code');
+	    $lexer_rules['addEntryPattern'][] = array('<file(?=.*</file>)',$mode,'copy');
+	    $lexer_rules['addExitPattern'][] = array('</file>','file');
+	    $lexer_rules['addEntryPattern'][] = array('\n>{1,}',$mode,'copy');
+	    $lexer_rules['addPattern'][] = array('\n>{1,}','quote');
+	    $lexer_rules['addExitPattern'][] = array('\n','quote');
+
+
+	    $ws   =  '\s/\#~:+=&%@\-\x28\x29\]\[{}><"\'';   // whitespace
+	    $punc =  ';,\.?!';
+
+	    if($conf['typography'] == 2){
+		$this->Lexer->addSpecialPattern(
+			    "(?<=^|[$ws])'(?=[^$ws$punc])",$mode,'singlequoteopening'
+			);
+		$this->Lexer->addSpecialPattern(
+			    "(?<=^|[^$ws]|[$punc])'(?=$|[$ws$punc])",$mode,'singlequoteclosing'
+			);
+		$this->Lexer->addSpecialPattern(
+			    "(?<=^|[^$ws$punc])'(?=$|[^$ws$punc])",$mode,'apostrophe'
+			);
+	    }
+
+	    $lexer_rules['addSpecialPattern'][] = array(
+			"(?<=^|[$ws])\"(?=[^$ws$punc])",$mode,'doublequoteopening'
+		    );
+	    $lexer_rules['addSpecialPattern'][] = array(
+			"\"",$mode,'doublequoteclosing'
+		    );
+
+
+	    //media
+	    $lexer_rules['addSpecialPattern'][] = array("\{\{[^\}]+\}\}",$mode,'copy');
+	    //link
+	    $lexer_rules['addSpecialPattern'][] = array("\[\[(?:(?:[^[\]]*?\[.*?\])|.*?)\]\]", $mode, 'copy');
+	}
+
+	//Try to read plugins
 	foreach( $files as $file )
 	{
 	    $handle = @fopen($file, "r");
@@ -226,6 +318,8 @@ class action_plugin_dtable extends DokuWiki_Action_Plugin {
 	    }
 
 	    $dtable =& plugin_load('helper', 'dtable');
+	    $dtable::$ID = $dtable_page_id;
+
 	    //$dtable::$lexer_rules = p_get_metadata($dtable_page_id, 'plugin_dtable_lexer_rules');
 
 	    $page_lines = explode( "\n", io_readFile( $file ) );
@@ -275,7 +369,10 @@ class action_plugin_dtable extends DokuWiki_Action_Plugin {
 		$table_line = (int) $_POST['get'];
 		$line_to_get = $dtable_start_line + $table_line;
 
-		echo $json->encode( $dtable->rows( $page_lines[ $line_to_get ], $dtable_page_id ) );
+		//0 - rows 1 - rowspan and colspans
+		$rows = $dtable->rows( $page_lines[ $line_to_get ], true );
+
+		echo $json->encode( $rows  );
 
 	    } elseif( isset( $_POST['edit'] ) )
 	    {
