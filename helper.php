@@ -18,6 +18,7 @@ require_once DOKU_PLUGIN.'syntax.php';
  */
 class helper_plugin_dtable extends dokuwiki_plugin
 {
+
     function getMethods(){
       $result = array();
       $result[] = array(
@@ -55,13 +56,10 @@ class helper_plugin_dtable extends dokuwiki_plugin
 	}
 	return $line_nr;
     }
-    function rows_count($line)
+    //bugged
+    function rows($row, $id)
     {
-	return substr_count($line, '|') - 1;
-    }
-    function rows($row)
-    {
-	if(strpos($row, '|') !== 0)
+	/*if(strpos($row, '|') !== 0)
 	    return false;
 
 	$row = substr( $row, 0, -1 );
@@ -69,7 +67,60 @@ class helper_plugin_dtable extends dokuwiki_plugin
 
 	$row = str_replace('\\\\ ', "\n", $row);
 
-	return explode('|', $row);
+	return explode('|', $row);*/
+
+	$lexer_rules = p_get_metadata($id, 'plugin_dtable_lexer_rules');
+
+	$Parser = new Doku_Parser();
+
+	$Parser->Handler = new Doku_Handler();
+	$Parser->Lexer = new Doku_Lexer( $Parser->Handler, 'base', TRUE );
+
+	foreach( $lexer_rules['addEntryPattern'] as $pattern )
+	{
+	    if( $pattern[2] == 'table' )
+		$mode = 'table';
+	    else
+		$mode = 'base';
+
+	    $Parser->Lexer->addEntryPattern($pattern[0], 'base', $mode);
+	}
+	foreach( $lexer_rules['addPattern'] as $pattern )
+	{
+	    if( $pattern[1] == 'table' )
+		$mode = 'table';
+	    else
+		$mode = 'base';
+
+	    $Parser->Lexer->addPattern($pattern[0], $mode);
+	}
+	foreach( $lexer_rules['addExitPattern'] as $pattern )
+	{
+	    if( $pattern[1] == 'table' )
+		$mode = 'table';
+	    else
+		$mode = 'base';
+
+	    $Parser->Lexer->addExitPattern($pattern[0], $mode);
+	}
+	foreach( $lexer_rules['addSpecialPattern'] as $pattern )
+	{
+	    if( $pattern[2] == 'table' )
+		$mode = 'table';
+	    else
+		$mode = 'base';
+
+	    $Parser->Lexer->addSpecialPattern($pattern[0], 'base', $mode);
+	}
+
+	//var_dump($Lexer);
+
+
+	$Parser->addMode('table', new Doku_Parser_Mode_table());
+
+	$instr = $Parser->parse($row);
+	dbglog($instr);
+	//return $instr;
     }
     function has_triple_colon($row, $col_nr)
     {
@@ -84,7 +135,7 @@ class helper_plugin_dtable extends dokuwiki_plugin
     }
     function get_rowspans($start_line_str, $table_line, $dtable_start_line, $page_lines)
     {
-	$table_rows =  helper_plugin_dtable::rows_count($start_line_str);
+	$table_rows =  count( helper_plugin_dtable::rows($start_line_str) );
 	$rowspans = array();
 
 

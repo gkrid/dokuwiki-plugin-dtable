@@ -22,6 +22,8 @@ class action_plugin_dtable extends DokuWiki_Action_Plugin {
 	    $controller->register_hook('DOKUWIKI_STARTED', 'AFTER',  $this, 'add_php_data');
 	    $controller->register_hook('AJAX_CALL_UNKNOWN', 'BEFORE',  $this, 'handle_ajax');
 	    $controller->register_hook('PARSER_WIKITEXT_PREPROCESS', 'AFTER',  $this, 'mark_dtables');
+
+	    $controller->register_hook('PARSER_METADATA_RENDER', 'AFTER',  $this, 'load_lexer_rules');
     }
     function mark_dtables(&$event, $parm)
     {
@@ -58,7 +60,130 @@ class action_plugin_dtable extends DokuWiki_Action_Plugin {
 	}
 	$event->data = implode("\n", $new_lines);
     }
-    
+    function load_lexer_rules(&$event, $param)
+    {
+	//files contianging lexer commands
+//	$files = array(DOKU_INC.'inc/parser/parser.php');
+	$files = array();
+
+	$type = 'syntax';
+	//$pluginlist = plugin_list($type);
+	//$plugin_files = array();
+	//get from plugincontroller.class.php 
+	//
+	$doku_plugin_dir = opendir(DOKU_PLUGIN);
+	while (($plugin_dir = readdir($doku_plugin_dir)) !== false)
+	{
+	    $plugin = $plugin_dir;
+
+	    if($plugin_dir == '.' || $plugin_dir == '..' || ! is_dir(DOKU_PLUGIN.$plugin_dir) || plugin_isdisabled($plugin) )
+		continue;
+
+	    $dir = $plugin;
+
+            if (@file_exists(DOKU_PLUGIN."$dir/$type.php")){
+                $files [] = DOKU_PLUGIN."$plugin/$type.php";
+            } else {
+                if ($dp = @opendir(DOKU_PLUGIN."$dir/$type/")) {
+                    while (false !== ($component = readdir($dp))) {
+                        if (substr($component,0,1) == '.' || strtolower(substr($component, -4)) != ".php") continue;
+                        if (is_file(DOKU_PLUGIN."$dir/$type/$component")) {
+                            $files[] = DOKU_PLUGIN."$dir/$type/".$component;
+                        }
+                    }
+                    closedir($dp);
+                }
+            }
+        }
+
+	//Lexer rules
+	$lexer_rules = array('addEntryPattern' => array(), 'addPattern' => array(), 'addExitPattern' => array(), 'addSpecialPattern' => array() );
+	foreach( $files as $file )
+	{
+	    $handle = @fopen($file, "r");
+	    if ($handle) {
+		while (($buffer = fgets($handle)) !== false) {
+		    if( strpos( $buffer, '$this->Lexer') !== false )
+		    {
+			$php_strs = array();
+			$php_strs_rep = array();
+			$php_strs_i = 0;
+			$php_str = '';
+			$escape_buffer = '';
+			$in_php_str = 0;
+			for( $i = 0; $i < strlen($buffer); $i++ )
+			{
+			    if( $buffer[ $i ] == '\\' )
+			    {
+				if( $in_php_str == 1)
+				{
+				    $php_str .= $buffer[ $i ];
+				    $php_str .= $buffer[ $i+1 ];
+				} else
+				{
+				    $escape_buffer .= $buffer[ $i ];
+				    $escape_buffer .= $buffer[ $i+1 ];
+				}
+				$i++;
+				continue;
+			    }
+
+			    if( $buffer[ $i ] == "'" || $buffer[ $i ] == '"' )
+			    {
+				if($in_php_str == 1)
+			        {
+				    $in_php_str = 0;
+				    $php_strs[ $php_strs_i ] = $php_str;
+				    $php_strs_rep[ $php_strs_i ] = '%'.$php_strs_i;
+				    $php_str = '';
+				    $escape_buffer .= '%'.$php_strs_i;
+				    $php_strs_i++;
+				} else
+				{
+				    $in_php_str = 1;
+				    $i++;
+				    $php_str .= $buffer[ $i ];
+				}
+			    } else
+			    {
+				if( $in_php_str == 1)
+				{
+				    $php_str .= $buffer[ $i ];
+				} else
+				{
+				    $escape_buffer .= $buffer[ $i ];
+				}
+			    }
+			}
+
+			$instructions = explode(';', $escape_buffer);
+			foreach($instructions as $instr)
+			{
+			    if( preg_match('/\$this->Lexer->([^(]*)\((.*)\)/', $instr, $matches)  )
+			    {
+				$function = trim($matches[1]);
+				if( array_key_exists($function, $lexer_rules) )
+				{
+				    $args_dirt = explode(',', $matches[2]);
+				    $args = array();
+				    foreach($args_dirt as $arg)
+				    {
+					$arg = str_replace($php_strs_rep, $php_strs, $arg);
+					$arg = trim($arg);
+					$args[] = $arg;
+				    }
+				    $lexer_rules[ $function ][] = $args;
+				}
+			    }
+			}
+		    }
+		}
+		fclose($handle);
+	    }
+	}
+
+	$event->data['current']['plugin_dtable_lexer_rules'] = $lexer_rules;
+    }
     function add_php_data(&$event, $param) {
 	global $JSINFO, $ID;
 
@@ -88,7 +213,7 @@ class action_plugin_dtable extends DokuWiki_Action_Plugin {
 	    $event->preventDefault();
 	    $event->stopPropagation();
 
-	    $dtable =& plugin_load('helper', 'dtable');
+
 
 	    $json = new JSON();
 
@@ -99,6 +224,10 @@ class action_plugin_dtable extends DokuWiki_Action_Plugin {
 		echo $json->encode( array('type' => 'error', 'msg' => 'This page does not exist.') );
 		exit(0);
 	    }
+
+	    $dtable =& plugin_load('helper', 'dtable');
+	    //$dtable::$lexer_rules = p_get_metadata($dtable_page_id, 'plugin_dtable_lexer_rules');
+
 	    $page_lines = explode( "\n", io_readFile( $file ) );
 
 	    if(isset($_POST['remove']))
@@ -146,7 +275,7 @@ class action_plugin_dtable extends DokuWiki_Action_Plugin {
 		$table_line = (int) $_POST['get'];
 		$line_to_get = $dtable_start_line + $table_line;
 
-		echo $json->encode( $dtable->rows( $page_lines[ $line_to_get ] ) );
+		echo $json->encode( $dtable->rows( $page_lines[ $line_to_get ], $dtable_page_id ) );
 
 	    } elseif( isset( $_POST['edit'] ) )
 	    {
