@@ -21,20 +21,38 @@ class action_plugin_dtable extends DokuWiki_Action_Plugin {
     function register(&$controller) {
 	    $controller->register_hook('DOKUWIKI_STARTED', 'AFTER',  $this, 'add_php_data');
 	    $controller->register_hook('AJAX_CALL_UNKNOWN', 'BEFORE',  $this, 'handle_ajax');
-	    $controller->register_hook('PARSER_WIKITEXT_PREPROCESS', 'AFTER',  $this, 'mark_dtables');
+	    $controller->register_hook('PARSER_WIKITEXT_PREPROCESS', 'AFTER',  $this, 'parser_preprocess_handler');
 
 	    $controller->register_hook('PARSER_METADATA_RENDER', 'AFTER',  $this, 'load_lexer_rules');
     }
-    function mark_dtables(&$event, $parm)
+    function parser_preprocess_handler(&$event, $parm)
     {
+	global $ID;
 	$lines = explode("\n", $event->data);
-	$in_tab = 0;
-	$in_dtable_tag = 0;
+	$new_lines = array();
+	//determine dtable page
 
-	$new_lines = $lines;
+	foreach($lines as $line)
+	{
+	    if(strpos($line, '<dtable>') === 0)
+	    {
+		$new_line = '<dtable id="'.$ID.'">';
+	    }
+	    else
+	    	$new_line = $line;
+
+	    $new_lines[] = $new_line;
+
+	}
+
+	//mark dtables
 	if($this->getConf('all_tables'))
 	{
 	    $new_lines = array();
+
+	    $in_tab = 0;
+	    $in_dtable_tag = 0;
+
 	    foreach($lines as $line)
 	    {
 		if(strpos($line, '<dtable>') === 0)
