@@ -19,8 +19,6 @@ require_once DOKU_PLUGIN.'syntax.php';
 class helper_plugin_dtable extends dokuwiki_plugin
 {
 
-    static $ID;
-
     function getMethods(){
       $result = array();
       $result[] = array(
@@ -58,18 +56,10 @@ class helper_plugin_dtable extends dokuwiki_plugin
 	}
 	return $line_nr;
     }
-    function rows($row, $get_spans=false)
+    function rows($row, $page_id, $get_spans=false)
     {
-	/*if(strpos($row, '|') !== 0)
-	    return false;
 
-	$row = substr( $row, 0, -1 );
-	$row = substr( $row, 1 );
-
-
-	return explode('|', $row);*/
-
-	$lexer_rules = p_get_metadata(helper_plugin_dtable::$ID, 'plugin_dtable_lexer_rules');
+	$lexer_rules = p_get_metadata($page_id, 'plugin_dtable_lexer_rules');
 
 	$Parser = new Doku_Parser();
 
@@ -131,9 +121,9 @@ class helper_plugin_dtable extends dokuwiki_plugin
 	else
 	    return false;
     }
-    function get_rowspans($start_line_str, $table_line, $dtable_start_line, $page_lines)
+    function get_rowspans($start_line_str, $table_line, $dtable_start_line, $page_lines, $page_id)
     {
-	$table_rows =  count( helper_plugin_dtable::rows($start_line_str) );
+	$table_rows =  count( helper_plugin_dtable::rows($start_line_str, $page_id) );
 	$rowspans = array();
 
 
@@ -204,7 +194,7 @@ class helper_plugin_dtable extends dokuwiki_plugin
 
 	for( $j = 0; $j < count( $rowspans ); $j++)
 	{
-	    if( $row = helper_plugin_dtable::rows($page_lines [ $rowspans[$j]['tr'] + $dtable_start_line ] ) )
+	    if( $row = helper_plugin_dtable::rows($page_lines [ $rowspans[$j]['tr'] + $dtable_start_line ], $page_id ) )
 	    {
 		for( $i = 0; $i < $rowspans[$j]['td']; $i++ )
 		{
@@ -226,9 +216,9 @@ class helper_plugin_dtable extends dokuwiki_plugin
 
 	return $line;
     }
-    function parse_line($line)
+    function parse_line($line, $page_id)
     {
-	$rows = helper_plugin_dtable::rows($line);
+	$rows = helper_plugin_dtable::rows($line, $page_id);
 
 	$cells = array();
 	foreach($rows as $row)

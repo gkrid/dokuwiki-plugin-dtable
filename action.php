@@ -336,7 +336,6 @@ class action_plugin_dtable extends DokuWiki_Action_Plugin {
 	    }
 
 	    $dtable =& plugin_load('helper', 'dtable');
-	    $dtable::$ID = $dtable_page_id;
 
 	    //$dtable::$lexer_rules = p_get_metadata($dtable_page_id, 'plugin_dtable_lexer_rules');
 
@@ -357,7 +356,7 @@ class action_plugin_dtable extends DokuWiki_Action_Plugin {
 		saveWikiText($dtable_page_id, $new_cont, $this->getLang('summary_remove').' '.$removed_line);
 
 
-		echo $json->encode( array('type' => 'alternate_success', 'rowspans' =>  $dtable->get_rowspans($removed_line, $table_line, $dtable_start_line, $page_lines) ) );
+		echo $json->encode( array('type' => 'alternate_success', 'rowspans' =>  $dtable->get_rowspans($removed_line, $table_line, $dtable_start_line, $page_lines, $dtable_page_id) ) );
 
 	    } elseif( isset( $_POST['add'] ) )
 	    {
@@ -381,14 +380,14 @@ class action_plugin_dtable extends DokuWiki_Action_Plugin {
 		$new_cont = implode( "\n", $page_lines );
 		saveWikiText($dtable_page_id, $new_cont, $this->getLang('summary_add').' '.$formated_line);
 
-		echo $json->encode( array('type' => 'alternate_success', 'new_row' => $dtable->parse_line($formated_line), 'rowspans' =>  $dtable->get_rowspans($formated_line, $table_line, $dtable_start_line, $page_lines) ) );
+		echo $json->encode( array('type' => 'alternate_success', 'new_row' => $dtable->parse_line($formated_line, $dtable_page_id), 'rowspans' =>  $dtable->get_rowspans($formated_line, $table_line, $dtable_start_line, $page_lines, $dtable_page_id) ) );
 	    } elseif( isset( $_POST['get'] ) )
 	    {
 		$table_line = (int) $_POST['get'];
 		$line_to_get = $dtable_start_line + $table_line;
 
 		//0 - rows 1 - rowspan and colspans
-		$rows = $dtable->rows( $page_lines[ $line_to_get ], true );
+		$rows = $dtable->rows( $page_lines[ $line_to_get ], $dtable_page_id, true );
 
 		echo $json->encode( $rows  );
 
@@ -418,7 +417,7 @@ class action_plugin_dtable extends DokuWiki_Action_Plugin {
 		$info = str_replace( array('%o', '%n'), array($old_line, $new_line), $this->getLang('summary_edit') );
 		saveWikiText($dtable_page_id, $new_cont, $info);
 
-		echo $json->encode( array('type' => 'alternate_success', 'new_row' => $dtable->parse_line($new_line), 'rowspans' =>  $dtable->get_rowspans($new_line, $table_line, $dtable_start_line, $page_lines) ) );
+		echo $json->encode( array('type' => 'alternate_success', 'new_row' => $dtable->parse_line($new_line, $dtable_page_id), 'rowspans' =>  $dtable->get_rowspans($new_line, $table_line, $dtable_start_line, $page_lines, $dtable_page_id) ) );
 	    }
 	break;
 	case 'dtable_page_lock':
