@@ -71,31 +71,19 @@ class syntax_plugin_dtable extends DokuWiki_Syntax_Plugin {
 			$id = $attrs['id'];
 			$filepath = wikiFN( $id );
 
-			//$match contains charter where dtable starts. 
-			//<dtable> is first line
-			$start_line = $dtable->line_nr($filepath, $pos) + 1;
+			$start_line = $dtable->line_nr($filepath, $pos) ;
 
 			//search for first row 
 			$file_cont = explode("\n", io_readWikiPage($filepath, $id));
 
 
-			$header_line = -1;
-			while( $start_line <  count($file_count) && strpos( $file_cont[ $start_line ], '|' ) !== 0 )
+			while( $start_line <  count($file_cont) 
+			    	&& strpos( $file_cont[ $start_line ], '|' ) !== 0 
+				&& strpos( $file_cont[ $start_line ], '</dtable>' ) !== 0 )
 			{
-			    if( strpos( $file_cont[ $start_line ], '^' ) !== 0 )
-				$header_line = $start_line;
-
-			    if( strpos( $file_cont[ $start_line ], '</dtable>' ) !== false )
-			    {
-				$start_line = $header_line;
-				break;
-			    }
-
 			    $start_line++;
 			}
 			
-			$start_line++;
-
 			$renderer->doc .= '<form class="dtable dynamic_form" id="dtable_'.$start_line.'_'.$id.'" action="'.$DOKU_BASE.'lib/exe/ajax.php" method="post">';
 			$renderer->doc .= '<input type="hidden" value="dtable" name="call">';
 
