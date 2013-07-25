@@ -215,6 +215,8 @@ class action_plugin_dtable extends DokuWiki_Action_Plugin {
 		while (($buffer = fgets($handle)) !== false) {
 		    if( strpos( $buffer, '$this->Lexer') !== false )
 		    {
+			//replace \\ by single \
+			$buffer = str_replace('\\\\', '\\', $buffer);
 			$php_strs = array();
 			$php_strs_rep = array();
 			$php_strs_i = 0;
@@ -286,6 +288,7 @@ class action_plugin_dtable extends DokuWiki_Action_Plugin {
 				}
 			    }
 			}
+			dbglog($lexer_rules);
 		    }
 		}
 		fclose($handle);
