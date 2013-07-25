@@ -126,7 +126,7 @@ class action_plugin_dtable extends DokuWiki_Action_Plugin {
 	    $lexer_rules['addExitPattern'][] = array('\*\*', 'copy');
 
 	    //emphasis
-	    $lexer_rules['addEntryPattern'][] = array('//(?=[^\x00]*[^:])', $mode, 'copy');
+	    $lexer_rules['addEntryPattern'][] = array('//(?=.//)', $mode, 'copy');//without hack for bugs #384 #763 #1468
 	    $lexer_rules['addExitPattern'][] = array('//', 'copy');
 
 	    //underline
