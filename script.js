@@ -347,8 +347,9 @@ jQuery.ui.dialog.prototype._oldcreate = jQuery.ui.dialog.prototype._create;
 jQuery.extend(jQuery.ui.dialog.prototype, {
     _init: function( )
     {
-	//This must be done to have correct z-index bahaviour
-	jQuery("#link__wiz").appendTo("body");
+	//This must be done to have correct z-index bahaviour in monobook template
+	var lin_wiz = jQuery("#link__wiz");
+	lin_wiz.appendTo("body");
 	 this._oldcreate();
     }
 });

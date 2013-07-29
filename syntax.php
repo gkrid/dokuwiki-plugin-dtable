@@ -87,6 +87,9 @@ class syntax_plugin_dtable extends DokuWiki_Syntax_Plugin {
 			$renderer->doc .= '<form class="dtable dynamic_form" id="dtable_'.$start_line.'_'.$id.'" action="'.$DOKU_BASE.'lib/exe/ajax.php" method="post">';
 			$renderer->doc .= '<input type="hidden" value="dtable" name="call">';
 
+			//This is needed to correct linkwiz behaviour.
+			$renderer->doc .= '<input type="hidden" value="'.$id.'" name="id">';
+
 		    }
 		}
 	    break;
