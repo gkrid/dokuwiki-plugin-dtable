@@ -197,7 +197,7 @@ dtable.unlock_dtable = function()
        dtable.pageY = e.pageY;
    }); 
 
-    jQuery("#dtable_context_menu a").live("click", contex_handler);
+    jQuery("#dtable_context_menu a").click(contex_handler);
 
 
     $row.bind("contextmenu", dtable.row_mousedown);
@@ -303,7 +303,7 @@ jQuery(".dtable.dynamic_form").each(function()
     
     for(var i = 0; i < td_len; i++ )
     {
-	$form_row.append( jQuery( '<td>' ).append('<textarea name="col' + i +'">') );
+		$form_row.append( jQuery( '<td>' ).append('<textarea name="col' + i +'">') );
     }
 });
 
@@ -467,8 +467,8 @@ contex_handler = function(e) {
 
 		
 		var old_row = $this_row;
-		$edit_link.die();
-		$edit_link.live('click', 
+		$edit_link.unbind('click');
+		$edit_link.click( 
 			function(e)
 			{
 			    dtable.hide_form($table);  
