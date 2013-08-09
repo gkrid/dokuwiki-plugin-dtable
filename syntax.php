@@ -26,21 +26,17 @@ class syntax_plugin_dtable extends DokuWiki_Syntax_Plugin {
     function getSort() { return 400; }
     function getAllowedTypes() {return array('container','formatting','substition');} 
 
-    function connectTo($mode) { $this->Lexer->addEntryPattern('<dtable[^>]*>(?=.*</dtable>)',$mode,'plugin_dtable'); }
+    function connectTo($mode) { $this->Lexer->addEntryPattern('<dtab[0-9][0-9]>(?=.*</dtable>)',$mode,'plugin_dtable'); }
     function postConnect() { $this->Lexer->addExitPattern('</dtable>','plugin_dtable'); }
 
 
     function handle($match, $state, $pos, &$handler) {
+		global $INFO;
         switch ($state) {
           case DOKU_LEXER_ENTER :
 	      try {
-		$attrs = array();
-	      	$xml = new SimpleXMLElement($match.'</dtable>');
-		foreach($xml->attributes() as $k => $v )
-		{
-		    $attrs[$k] = (string)$v;
-		}
-                return array($state, array($pos, $attrs) );
+		  		$table_nr = (int) substr($match, 5, 2);
+                return array($state, array($pos, $table_nr, p_get_metadata($INFO['id'], 'dtable_pages')));
 	      } catch(Exception $e)
 	      {
 		  return array($state, false);
@@ -66,9 +62,10 @@ class syntax_plugin_dtable extends DokuWiki_Syntax_Plugin {
 			$dtable =& plugin_load('helper', 'dtable');
 
 			$pos = $match[0];
-			$attrs = $match[1];
+			$table_nr = $match[1];
+			$dtable_pages = $match[2];
 
-			$id = $attrs['id'];
+			$id = $dtable_pages[$table_nr];
 			$filepath = wikiFN( $id );
 
 			$start_line = $dtable->line_nr($filepath, $pos) ;

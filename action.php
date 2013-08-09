@@ -27,56 +27,62 @@ class action_plugin_dtable extends DokuWiki_Action_Plugin {
     }
     function parser_preprocess_handler(&$event, $parm)
     {
-	global $ID;
-	$lines = explode("\n", $event->data);
-	$new_lines = array();
-	//determine dtable page
+		global $ID, $INFO;
+		$lines = explode("\n", $event->data);
+		$new_lines = array();
+		//determine dtable page
 
-	foreach($lines as $line)
-	{
-	    if(strpos($line, '<dtable>') === 0)
-	    {
-		$new_line = '<dtable id="'.$ID.'">';
-	    }
-	    else
-	    	$new_line = $line;
-
-	    $new_lines[] = $new_line;
-
-	}
-
-	//mark dtables
-	if($this->getConf('all_tables'))
-	{
-	    $new_lines = array();
-
-	    $in_tab = 0;
-	    $in_dtable_tag = 0;
-
-	    foreach($lines as $line)
-	    {
-		if(strpos($line, '<dtable>') === 0)
-		    $in_dtable_tag = 1;
-		if(strpos($line, '</dtable>') === 0)
-		    $in_dtable_tag = 0;
-
-		if(strpos($line, '|') !== 0 && $in_tab == 1 && $in_dtable_tag == 0)
+		//only 100 dtables per page
+		$i = 0;
+		$dtable_pages = array();
+		foreach($lines as $line)
 		{
-		    $new_lines[] = '</dtable>';
-		    $in_tab = 0;
+			if(strpos($line, '<dtable>') === 0) {
+				$new_lines[] = '<dtab'.( $i < 10 ? '0'.$i : $i ).'>';
+				$dtable_pages[$i] = $ID;
+				$i++;
+			} else
+			{
+				$new_lines[] = $line;
+			}
 		}
 
-		if(strpos($line, '^') === 0 && $in_tab == 0 && $in_dtable_tag == 0)
-		{
-		    $new_lines[] = '<dtable>';
-		    $in_tab = 1;
-		}
+		//it will make include plugin behaves correctly
+		p_set_metadata($INFO['id'], array('dtable_pages' => $dtable_pages), false, false);
 
-		$new_lines[] = $line;
-	    }
-	    $lines = $new_lines;
-	}
-	$event->data = implode("\n", $new_lines);
+		//mark dtables
+		//it will not work becouse section editing in dokuwiki needs no modified content.
+		if($this->getConf('all_tables'))
+		{
+			$new_lines = array();
+
+			$in_tab = 0;
+			$in_dtable_tag = 0;
+
+			foreach($lines as $line)
+			{
+			if(strpos($line, '<dtable>') === 0)
+				$in_dtable_tag = 1;
+			if(strpos($line, '</dtable>') === 0)
+				$in_dtable_tag = 0;
+
+			if(strpos($line, '|') !== 0 && $in_tab == 1 && $in_dtable_tag == 0)
+			{
+				$new_lines[] = '</dtable>';
+				$in_tab = 0;
+			}
+
+			if(strpos($line, '^') === 0 && $in_tab == 0 && $in_dtable_tag == 0)
+			{
+				$new_lines[] = '<dtable>';
+				$in_tab = 1;
+			}
+
+			$new_lines[] = $line;
+			}
+			$lines = $new_lines;
+		} 
+		$event->data = implode("\n", $new_lines);
     }
     function load_lexer_rules(&$event, $param)
     {
