@@ -138,7 +138,7 @@ dtable.hide_form = function($table)
 dtable.get_data_rows = function($table)
 {
 	//.not(".form_row") is nesssesery
-    return $table.find("tr").not(".form_row");//.not(":hidden");
+    return $table.find("tr").not(".form_row").not(":hidden");
 };
 dtable.get_row_id = function($table, $row)
 {
@@ -372,7 +372,7 @@ dtable.clear_all_intervals = function()
 
 dtable.change_rows = function($table, rowspans)
 {
-      /*for( row in rowspans )
+      for( row in rowspans )
       {
 	  var rowspan = rowspans[ row ];
 
@@ -383,7 +383,7 @@ dtable.change_rows = function($table, rowspans)
 	  $cell.attr("rowspan", rowspan.val);
 
 
-      }*/
+      }
 };
 
 dtable.get_table_id = function($form)
@@ -392,7 +392,7 @@ dtable.get_table_id = function($form)
     return table.replace(/^dtable_/, '');
 };
 
-dtable.new_build_form = function($form, $row, action, value, row_data, colspan_callback, mod_cell_callback)
+dtable.new_build_form = function($form, $row, action, value, rows, colspan_callback)
 {
     
 
@@ -416,7 +416,7 @@ dtable.new_build_form = function($form, $row, action, value, row_data, colspan_c
 	var rowspans_keys = [];
 	var rows_before = 1;
 	//found rowspans mother cells
-	jQuery($this_row.next().prevAll().get().reverse()).each(
+	jQuery($this_row.prevAll().get().reverse()).each(
 		function() {
 			jQuery(this).find("td, th").each(function()
 				{
@@ -443,21 +443,7 @@ dtable.new_build_form = function($form, $row, action, value, row_data, colspan_c
 		var colspan = parseInt(row_data[i][1]); 
 		var content = row_data[i][2]; 
 
-		var $father_cell = $row.find("td, th").eq(td_index);
-		var rowspan = $father_cell.attr('rowspan');
 
-		//console.log(mod_cell_callback);
-		if (mod_cell_callback !== undefined) {
-			var mod = mod_cell_callback.call(this, tclass, rowspan, colspan, content);
-
-			tclass = mod[0];
-			rowspan = mod[1];
-			colspan = mod[2];
-			content = mod[3];
-		}
-
-		/*console.log(content);
-			console.log(rowspans_keys[rowsp_cell_ind]);*/
 		if (content == ':::')
 		{
 			var $mother_cell = rowspans[rowspans_keys[rowsp_cell_ind]];
@@ -465,33 +451,26 @@ dtable.new_build_form = function($form, $row, action, value, row_data, colspan_c
 			rowsp_cell_ind++;
 			jQuery('<textarea class="'+tclass+' rowspans" name="col' + col +'">').val(content).width(width).css({'position': 'relative', 'display': 'block'}).appendTo($mother_cell);
 			col++;
-			if ($mother_cell.get(0) === $father_cell.get(0))
-				td_index++;
 		} else
 		{
+			var $father_cell = $row.find("td, th").eq(td_index);
 
-			if (action === "edit") {
-				var width = $father_cell.width();// + 10;
-				var height = $father_cell.height(); //+ 5;
-				if (height < 40)
-					height = 40;
-				if (width < 80)
-					width = 80;
-			} else
-			{
-				width = $father_cell.width();
-				height = 50;
-			}
+			var width = $father_cell.width();// + 10;
+			var height = $father_cell.height(); //+ 5;
+			if (height < 40)
+			   	height = 40;
+			if (width < 80)
+			   	width = 80;
 
 			if (colspan > 1)
 			{
-				col = colspan_callback.call(this, $form_row, colspan,  width, height, tclass, col, content);
+				colspan_callback.call($form_row, colspan,  width, height. tclass, col);
 				td_index++;
 
 			} else
 			{
 
-				var $form_cell = jQuery('<td>').attr({rowspan: rowspan});
+				var $form_cell = jQuery('<td>').attr({rowspan: $father_cell.attr('rowspan')});
 				$textarea = jQuery('<textarea class="'+tclass+'" name="col' + col +'">').val(content).width(width).height(height).appendTo($form_cell);
 
 				td_index++;
@@ -507,7 +486,6 @@ dtable.new_build_form = function($form, $row, action, value, row_data, colspan_c
     var $toolbar = jQuery("#"+dtable.toolbar_id);
 	initToolbar(dtable.toolbar_id, dtable.textarea_id, toolbar);//??? - ale działa
 };
-/*
 dtable.build_form = function($form, $row, action, value)
 {
     
@@ -551,56 +529,10 @@ dtable.build_form = function($form, $row, action, value)
 
     var $toolbar = jQuery("#"+dtable.toolbar_id);
 	initToolbar(dtable.toolbar_id, dtable.textarea_id, toolbar);//??? - ale działa
-};*/
-
-dtable.remove = function($this_row) {
-	$form = $this_row.closest("form");
-	$table = $form.find("table");
-
-	  jQuery.post(DOKU_BASE + 'lib/exe/ajax.php', 
-	  {
-	      'call': dtable.get_call($form),
-	      'table': dtable.get_table_id($form),
-	      'remove': dtable.get_row_id($table, $this_row)
-	  },
-	  function(data)
-	  {
-	      var res = jQuery.parseJSON(data);
-	      if(res.type == 'success')
-	      {
-			$this_row.remove();
-			var rows_data = $form.data("table");
-			rows_data.splice(dtable.get_row_id($table, $this_row), 1);
-			$form.data("table", rows_data);
-
-			//change rows in case of rowspan
-			dtable.change_rows($table, res.rowspans);
-
-
-			/*if($table.find("tr").length <= 2 )
-			{
-			  dtable.show_form($table);  
-			}*/
-	      } else
-	      {
-			  dtable.error(res.msg);
-	      }
-	  });
 };
 
 dtable.contex_handler = function(e) {
     e.preventDefault();
-
-	var insert_colspan_callback = 
-				function($form_row, colspan,  width, height, tclass, col) {
-					width /= colspan;
-					for (var j = 0; j < colspan; j++)
-					{
-						jQuery('<textarea class="'+tclass+'" name="col' + col +'">').val('').width(width).height(height).appendTo(jQuery('<td>').appendTo($form_row));
-						col++;
-					}
-					return col;
-				}; 
 
     $this_row = dtable.row;
     dtable.id = $this_row.closest(".dtable").attr("id");
@@ -618,7 +550,39 @@ dtable.contex_handler = function(e) {
     switch(ev)
     {
 	case '#remove':
-		dtable.remove($this_row);
+	  jQuery.post(DOKU_BASE + 'lib/exe/ajax.php', 
+	  {
+	      'call': dtable.get_call($form),
+	      'table': table,
+	      'remove': dtable.get_row_id($table, $this_row)
+	  },
+	  function(data)
+	  {
+	      var res = jQuery.parseJSON(data);
+	      if(res.type == 'success')
+	      {
+		  $this_row.remove();
+		  if($table.find("tr").length <= 2 )
+		  {
+		    dtable.show_form($table);  
+		  }
+	      } else if(res.type == 'alternate_success')
+	      {
+		  $this_row.remove();
+
+		  //change rows in case of rowspan
+		  dtable.change_rows($table, res.rowspans);
+
+
+		  if($table.find("tr").length <= 2 )
+		  {
+		    dtable.show_form($table);  
+		  }
+	      } else
+	      {
+		  dtable.error(res.msg);
+	      }
+	  });
 	break;
 	case '#edit':
 
@@ -626,7 +590,7 @@ dtable.contex_handler = function(e) {
 		var rows = rows_data[dtable.get_row_id($table, $this_row)];
 
 		dtable.new_build_form($form, $this_row, "edit", dtable.get_row_id($table, $this_row), rows,
-				function($form_row, colspan,  width, height, tclass, col, content) {
+				function($form_row, colspan,  width, height, tclass, col) {
 					$form_cell = jQuery('<td>').attr({'colspan': colspan});
 
 					var $button = jQuery('<button class="toolbutton dtable_unmerge" title="'+((JSINFO['lang']['show_merged_rows']).replace("%d", colspan-1))+'"><img width="16" height="16" src="lib/plugins/dtable/images/unmerge.png"></button>').appendTo($form_cell);
@@ -664,7 +628,6 @@ dtable.contex_handler = function(e) {
 						}
 						jQuery(this).remove();
 					});
-					return col;
 				});
 		$this_row.after($table.find(".form_row"));
 
@@ -731,7 +694,7 @@ dtable.contex_handler = function(e) {
 		var rows = rows_data[dtable.get_row_id($table, $this_row)];
 
 		//in inserting we don't copy tableheaders and split all colspan cells
-		/*var new_rows = [];
+		var new_rows = [];
 		for(ind in rows) {
 			var cell = rows[ind];
 			if (cell[2] !== ':::')
@@ -748,23 +711,18 @@ dtable.contex_handler = function(e) {
 			} else {
 				new_rows.push(cell);
 			}*/
-		/*	new_rows.push(cell);
-		}*/
+			new_rows.push(cell);
+		}
 
-		dtable.new_build_form($form, $this_row, "add", dtable.get_row_id($table, $this_row), rows, 
-				insert_colspan_callback,
-				function(cclass, rowspan, colspan, value)
-			    {
-					if (value !== ':::')
-						value = '';
-					if (typeof rowspan !== 'undefined' && rowspan !== false && rowspan > 1) {
-						rowspan = 1;
-						value = ':::'
+		dtable.new_build_form($form, $this_row, "add", dtable.get_row_id($table, $this_row), new_rows, 
+				function($form_row, colspan,  width, height. tclass, col) {
+					width /= colspan;
+					for (var j = 0; j < colspan; j++)
+					{
+						jQuery('<textarea class="'+tclass+'" name="col' + col +'">').val('').width(width).height(height).appendTo(jQuery('<td>').appendTo($form_row));
+						col++;
 					}
-
-					cclass = 'tablecell_open';
-					return [cclass, rowspan, colspan, value];
-			    });
+				});
 		//dtable.build_form($form, $this_row, "add", dtable.get_row_id($table, $this_row));
 
 		var $form_row = $table.find(".form_row");
@@ -776,47 +734,12 @@ dtable.contex_handler = function(e) {
 
 		var $form_row = $table.find(".form_row");
 
-		var rows_data = $form.data("table");
-
 		var $before_elm = $this_row.prev();
 		var add = -1;
 		if($before_elm.length != 0)
 		    add = dtable.get_row_id($table, $before_elm);
 
-		var rows = rows_data[dtable.get_row_id($table, $this_row)];
-
-		if (add === -1) {
-			var mod_row_call = 
-				function(cclass, rowspan, colspan, value)
-			    {
-					if (value !== ':::')
-						value = '';
-					if (typeof rowspan !== 'undefined' && rowspan !== false && rowspan > 1) {
-						rowspan = 1;
-						value = ''
-					}
-
-					cclass = 'tablecell_open';
-					return [cclass, rowspan, colspan, value];
-			    };
-		} else {
-			var mod_row_call = 
-				function(cclass, rowspan, colspan, value)
-			    {
-					if (value !== ':::')
-						value = '';
-					if (typeof rowspan !== 'undefined' && rowspan !== false && rowspan > 1) {
-						rowspan = 1;
-						value = ':::'
-					}
-
-					cclass = 'tablecell_open';
-					return [cclass, rowspan, colspan, value];
-			    };
-		}
-
-		dtable.new_build_form($form, $this_row, "add", add, rows, 
-				insert_colspan_callback, mod_row_call);
+		dtable.build_form($form, $this_row, "add", add);
 
 		$this_row.before($table.find(".form_row"));
 		dtable.show_form($table);  
@@ -917,83 +840,92 @@ jQuery(".dtable").submit(
 	function()
 	{
 	    var $form = jQuery(this);
-	    if($form.attr("id") == dtable.id) {
-			dtable.form_processing = true;
-			var data = {};
-			var action = jQuery(this).find("input.dtable_action").attr("name");
-			var any_data = false;
-			jQuery(this).find("textarea, input").each(
-				function()
-				{
-					/*	var colspan = jQuery(this).closest('td, th').attr('colspan');
-						if (typeof colspan === 'undefined' || colspan === false)
-							colspan = 1;*/
+	    if($form.attr("id") == dtable.id)
+	    {
+		dtable.form_processing = true;
+		var data = {};
+		jQuery(this).find("textarea, input").each(
+		    function()
+		    {
+				/*	var colspan = jQuery(this).closest('td, th').attr('colspan');
+					if (typeof colspan === 'undefined' || colspan === false)
+						colspan = 1;*/
 
-					//if row is empty it isn't submited during adding and it's deleting during editing
+				if (jQuery(this).attr("class") != null && jQuery(this).attr("name").indexOf("col") == 0) 
+					data[jQuery(this).attr("name")] = JSON.stringify([jQuery(this).attr("class"), jQuery(this).val()]);
+				else
+					data[jQuery(this).attr("name")] = jQuery(this).val();
+		    });
+		jQuery.post(DOKU_BASE + 'lib/exe/ajax.php', 
+			    data,
+		function(data)
+		{
+		      var res = jQuery.parseJSON(data);
+		      //left for comtability with dtableremote
+		      if(res.type == 'success')
+		      {
+			  
+			  $new_elm = jQuery('<tr>');
+			  $form.find(".form_row").after($new_elm);
 
-					if (jQuery(this).attr("class") != null && jQuery(this).attr("name").indexOf("col") == 0) {
-						if (jQuery(this).val() != "" && jQuery(this).val() != ':::')
-							any_data = true;
-						data[jQuery(this).attr("name")] = JSON.stringify([jQuery(this).attr("class"), jQuery(this).val()]);
-					} else
-						data[jQuery(this).attr("name")] = jQuery(this).val();
-				});
+			  for(f in res.fileds)
+			  {
+			      $new_elm.append("<td>"+res.fileds[f]+"</td>");
+			  }
 
-			if (any_data == true) {
-				jQuery.post(DOKU_BASE + 'lib/exe/ajax.php', 
-						data,
-				function(data)
-				{
-					  var res = jQuery.parseJSON(data);
-					  //left for comtability with dtableremote
-					  if(res.type == 'success')
-					  {
-						  
-						  if( res.new_row !== undefined )
-						  {
-							  //remove old element
-							  $form.find("tr:hidden").remove();
+			  if(dtable.page_locked == 1)
+			      $new_elm.find("td, th").bind("contextmenu", dtable.row_mousedown);
 
-							  var $table = $form.find("table");
+			  //remove old element
+			  $form.find("tr:hidden").remove();
 
-							  $new_elm = jQuery('<tr>');
-							  $new_elm.html( res.new_row );
+			  dtable.hide_form($form);
+			  $form.find(".form_row input, textarea").val('');
 
-							  $form.find(".form_row").after($new_elm);
-							  if(dtable.page_locked == 1)
-								  $new_elm.find("td, th").bind("contextmenu", dtable.row_mousedown);
+			//$edit_link = jQuery("#dtable_context_menu a");
+			
+			//$edit_link.die();
+			//$edit_link.live('click', dtable.contex_handler);
 
-							  var index = dtable.get_row_id($table, $new_elm);
-							  
-							  var raw_rows = $form.data('table');
+		      } else if(res.type == 'alternate_success')
+		      {
+				  
+				  if( res.new_row !== undefined )
+				  {
+					  var $table = $form.find("table");
 
-							  raw_rows[index] = res.raw_row;
-							  $form.data('table', raw_rows);
-						  }
+					  $new_elm = jQuery('<tr>');
+					  $new_elm.html( res.new_row );
 
-						  dtable.hide_form($form);
-						  //$form.find(".form_row input, textarea").val('');
+					  $form.find(".form_row").after($new_elm);
+					  if(dtable.page_locked == 1)
+					  $new_elm.find("td, th").bind("contextmenu", dtable.row_mousedown);
 
-						  var $table = $form.find("table");
-						  dtable.change_rows($table, res.rowspans);
+					  var index = dtable.get_row_id($table, $new_elm);
+					  
+					  var raw_rows = $form.data('table');
 
-					  } else
-					  {
-						  dtable.error(res.msg);
-					  }
-					  //$form.find(".dtable_action").attr("name", "add").attr("value", "-1");
-					  dtable.form_processing = false;
-				   });
-			} else {
-				if (action == "edit") {
-					$this_row = $form.find("tr:hidden")
-					dtable.remove($this_row);
-					$this_row.remove();
-				}
+					  raw_rows[index] = res.raw_row;
+					  console.log(res.raw_row);
+					  $form.data('table', raw_rows);
+
+				  }
+
+				  //remove old element
+				  $form.find("tr:hidden").remove();
 				  dtable.hide_form($form);
-				dtable.form_processing = false;
-				  //var $table = $form.find("table");
-			}
+				  //$form.find(".form_row input, textarea").val('');
+
+				  
+				  var $table = $form.find("table");
+				  dtable.change_rows($table, res.rowspans);
+		      } else
+		      {
+				  dtable.error(res.msg);
+		      }
+		      //$form.find(".dtable_action").attr("name", "add").attr("value", "-1");
+		      dtable.form_processing = false;
+	       });
 	    }
 	   return false;
 	});

@@ -73,15 +73,19 @@ class syntax_plugin_dtable extends DokuWiki_Syntax_Plugin {
 			//search for first row 
 			$file_cont = explode("\n", io_readWikiPage($filepath, $id));
 
+			$start_line++;
 
-			while( $start_line <  count($file_cont) 
-			    	&& strpos( $file_cont[ $start_line ], '|' ) !== 0 
-				&& strpos( $file_cont[ $start_line ], '</dtable>' ) !== 0 )
+			$i = $start_line;
+			$raw_lines = array();
+			while( $i <  count($file_cont) 
+				   && strpos( $file_cont[ $i ], '</dtable>' ) !== 0 )
 			{
-			    $start_line++;
+				$raw_lines[] = $dtable->rows($file_cont[$i], $id);
+				$i++;
 			}
-			
-			$renderer->doc .= '<form class="dtable dynamic_form" id="dtable_'.$start_line.'_'.$id.'" action="'.$DOKU_BASE.'lib/exe/ajax.php" method="post">';
+			$json = new JSON();
+
+			$renderer->doc .= '<form class="dtable dynamic_form" id="dtable_'.$start_line.'_'.$id.'" action="'.$DOKU_BASE.'lib/exe/ajax.php" method="post" data-table="'.htmlspecialchars($json->encode($raw_lines)).'">';
 			$renderer->doc .= '<input type="hidden" value="dtable" name="call">';
 
 			//This is needed to correct linkwiz behaviour.

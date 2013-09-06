@@ -1,7 +1,7 @@
 /* Generic context menu styles */
 #dtable_context_menu {
 	position: absolute;
-	width: 140px;
+	width: 340px;
 	z-index: 99999;
 	border: solid 1px #CCC;
 	background: #EEE;
@@ -56,4 +56,13 @@
 .dtable .panlock span
 {
     font-weight:bold;
+}
+
+.dtable textarea.tableheader_open {
+	background-color: #CCCCCC;
+}
+
+.dtable textarea {
+	margin: 0;
+	padding:0;
 }

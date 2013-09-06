@@ -4,6 +4,18 @@ $lang['insert_after'] = 'Insert after';
 $lang['insert_before'] = 'Insert before';
 $lang['edit'] = 'Edit';
 $lang['remove'] = 'Remove';
+$lang['insert_col_left'] = 'Insert column left';
+$lang['insert_col_right'] = 'Insert column right';
+$lang['mark_row_as_header'] = 'Switch this row to header row';
+$lang['mark_col_as_header'] = 'Switch this column to header column';
+$lang['mark_cell_as_header'] = 'Switch this cell to header cell';
+
+$lang['mark_row_as_cell'] = 'Switch this row to normal cells row';
+$lang['mark_col_as_cell'] = 'Switch this column to normal cells column';
+$lang['mark_cell_as_cell'] = 'Switch this header cell to normal cell';
+
+$lang['show_merged_rows'] = 'There are %d more megred cells. Click here to unmerge.';
+
 $lang['db_error'] = 'Error: cannot open file to read/write. Check your permissions and try again.';
 $lang['correct'] = 'correct';
 $lang['upload_file'] = 'upload file';

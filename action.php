@@ -311,10 +311,22 @@ class action_plugin_dtable extends DokuWiki_Action_Plugin {
 	else
 	    $JSINFO['write'] = false;
 
+
 	$JSINFO['lang']['insert_before'] = $this->getLang('insert_before');
 	$JSINFO['lang']['insert_after'] = $this->getLang('insert_after');
 	$JSINFO['lang']['edit'] = $this->getLang('edit');
 	$JSINFO['lang']['remove'] = $this->getLang('remove');
+	$JSINFO['lang']['insert_col_left'] = $this->getLang('insert_col_left');
+	$JSINFO['lang']['insert_col_right'] = $this->getLang('insert_col_right');
+	$JSINFO['lang']['mark_row_as_header'] = $this->getLang('mark_row_as_header');
+	$JSINFO['lang']['mark_col_as_header'] = $this->getLang('mark_col_as_header');
+	$JSINFO['lang']['mark_cell_as_header'] = $this->getLang('mark_cell_as_header');
+
+	$JSINFO['lang']['mark_row_as_cell'] = $this->getLang('mark_row_as_cell');
+	$JSINFO['lang']['mark_col_as_cell'] = $this->getLang('mark_col_as_cell');
+	$JSINFO['lang']['mark_cell_as_cell'] = $this->getLang('mark_cell_as_cell');
+
+	$JSINFO['lang']['show_merged_rows'] = $this->getLang('show_merged_rows');
 
 	$JSINFO['lang']['lock_notify'] = str_replace(
 	    array('%u', '%t'), 
@@ -340,8 +352,8 @@ class action_plugin_dtable extends DokuWiki_Action_Plugin {
 	    $file = wikiFN( $dtable_page_id );
 	    if( ! @file_exists( $file  ) )
 	    {
-		echo $json->encode( array('type' => 'error', 'msg' => 'This page does not exist.') );
-		exit(0);
+			echo $json->encode( array('type' => 'error', 'msg' => 'This page does not exist.') );
+			exit(0);
 	    }
 
 	    $dtable =& plugin_load('helper', 'dtable');
@@ -365,70 +377,95 @@ class action_plugin_dtable extends DokuWiki_Action_Plugin {
 			saveWikiText($dtable_page_id, $new_cont, $this->getLang('summary_remove').' '.$removed_line);
 
 
-			echo $json->encode( array('type' => 'alternate_success', 'rowspans' =>  $dtable->get_rowspans($removed_line, $table_line, $dtable_start_line, $page_lines, $dtable_page_id) ) );
+			echo $json->encode( array('type' => 'success', 'rowspans' =>  $dtable->get_rowspans($removed_line, $table_line, $dtable_start_line, $page_lines, $dtable_page_id) ) );
 
-	    } elseif( isset( $_POST['add'] ) )
-	    {
-			$table_line = (int) $_POST['add'] + 1;
-			$line_to_add = $dtable_start_line + $table_line;
-
-			$new_table_line = array();
-			foreach( $_POST as $k => $v )
-			{
-				if( strpos( $k, 'col' ) === 0)
-				{
-				$new_table_line[$k] = $v;
-				}
-			}
-			ksort($new_table_line);
-
-			$formated_line = $dtable->format_row($new_table_line);
-
-			array_splice($page_lines, $line_to_add, 0, $formated_line );
-
-			$new_cont = implode( "\n", $page_lines );
-			saveWikiText($dtable_page_id, $new_cont, $this->getLang('summary_add').' '.$formated_line);
-
-			echo $json->encode( array('type' => 'alternate_success', 'new_row' => $dtable->parse_line($formated_line, $dtable_page_id), 'rowspans' =>  $dtable->get_rowspans($formated_line, $table_line, $dtable_start_line, $page_lines, $dtable_page_id) ) );
-		} elseif( isset( $_POST['get'] ) )
+		} else
 		{
-			$table_line = (int) $_POST['get'];
-			$line_to_get = $dtable_start_line + $table_line;
-
-			//0 - rows 1 - rowspan and colspans
-			$rows = $dtable->rows( $page_lines[ $line_to_get ], $dtable_page_id, true );
-
-			echo $json->encode( $rows  );
-
-	    } elseif( isset( $_POST['edit'] ) )
-	    {
-			$table_line = (int) $_POST['edit'];
-			$line_to_change = $dtable_start_line + $table_line;
-
+			$cols = array();
 			$new_table_line = array();
 			foreach( $_POST as $k => $v )
 			{
 				if( strpos( $k, 'col' ) === 0)
 				{
 					//remove col from col12, col1 etc. to be 12 1
-					$new_table_line[(int)substr($k, 3)] = $v;
+					$cols[(int)substr($k, 3)] = $json->decode($v);
 				}
 			}
-			ksort($new_table_line);
+			ksort($cols);
 
-			$new_line = $dtable->format_row($new_table_line);
+			//reset index
+			$cols = array_values($cols);
 
-			$old_line = $page_lines[ $line_to_change ];
+			$j = 0;
+			for($i = 0; $i < count($cols); $i++) {
+					$class = $cols[$i][0];
+					$value = $cols[$i][1];
 
-			$page_lines[ $line_to_change ] = $new_line;
+					if ($value == '' && $j >= 1)
+						$new_table_line[$j-1][1]++;
+					else {
+						$new_table_line[$j] = array($class, 1, $value);
+						$j++;
+					}
+			}
+
+			$new_line = $dtable->format_row($cols);
+
+			if( isset( $_POST['add'] ) )
+			{
+				$table_line = (int) $_POST['add'] + 1;
+				$line_to_add = $dtable_start_line + $table_line;
+
+				array_splice($page_lines, $line_to_add, 0, $new_line );
+
+				$info = $this->getLang('summary_add').' '.$new_line;
+
+			} elseif( isset( $_POST['edit'] ) )
+			{
+				$table_line = (int) $_POST['edit'];
+				$line_to_change = $dtable_start_line + $table_line;
+
+				$old_line = $page_lines[ $line_to_change ];
+
+				$page_lines[ $line_to_change ] = $new_line;
+
+				$new_cont = implode( "\n", $page_lines );
+
+				$info = str_replace( array('%o', '%n'), array($old_line, $new_line), $this->getLang('summary_edit') );
+			}
 
 			$new_cont = implode( "\n", $page_lines );
-
-			$info = str_replace( array('%o', '%n'), array($old_line, $new_line), $this->getLang('summary_edit') );
 			saveWikiText($dtable_page_id, $new_cont, $info);
 
-			echo $json->encode( array('type' => 'alternate_success', 'new_row' => $dtable->parse_line($new_line, $dtable_page_id), 'rowspans' =>  $dtable->get_rowspans($new_line, $table_line, $dtable_start_line, $page_lines, $dtable_page_id) ) );
-	    }
+			echo $json->encode( array('type' => 'success', 'new_row' => $dtable->parse_line($new_line, $dtable_page_id), 'raw_row' => $new_table_line, 'rowspans' =>  $dtable->get_rowspans($new_line, $table_line, $dtable_start_line, $page_lines, $dtable_page_id) ) );
+
+				/*$table_line = (int) $_POST['edit'];
+				$line_to_change = $dtable_start_line + $table_line;
+
+				$new_table_line = array();
+				foreach( $_POST as $k => $v )
+				{
+					if( strpos( $k, 'col' ) === 0)
+					{
+						//remove col from col12, col1 etc. to be 12 1
+						$new_table_line[(int)substr($k, 3)] = $json->decode($v);
+					}
+				}
+				ksort($new_table_line);
+
+				$new_line = $dtable->format_row($new_table_line);
+
+				$old_line = $page_lines[ $line_to_change ];
+
+				$page_lines[ $line_to_change ] = $new_line;
+
+				$new_cont = implode( "\n", $page_lines );
+
+				$info = str_replace( array('%o', '%n'), array($old_line, $new_line), $this->getLang('summary_edit') );
+				saveWikiText($dtable_page_id, $new_cont, $info);*/
+
+				//echo $json->encode( array('type' => 'alternate_success', 'new_row' => $dtable->parse_line($new_line, $dtable_page_id), 'raw_row' => $new_table_line, 'rowspans' =>  $dtable->get_rowspans($new_line, $table_line, $dtable_start_line, $page_lines, $dtable_page_id) ) );
+		}
 	break;
 	case 'dtable_page_lock':
 	    $event->preventDefault();
