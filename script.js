@@ -1,8 +1,3 @@
-/*
- * getStyleObject Plugin for jQuery JavaScript Library
- * From: http://upshots.org/?p=112
- */
-
 (function($){
     jQuery.fn.getStyleObject = function(styles){
 		var ret_style = {};
@@ -381,9 +376,21 @@ dtable.change_rows = function($table, rowspans)
 
 	      
 	  $cell.attr("rowspan", rowspan.val);
-
-
       }*/
+
+//	console.log(rowspans);
+
+	$table.find("tr").each(function(index) {
+		jQuery(this).find("td, th").each(function(td_ind) {
+			if (rowspans[index][td_ind] !== 1) {
+				jQuery(this).attr("rowspan", rowspans[index][td_ind]);
+			} else {
+				jQuery(this).removeAttr("rowspan");
+			}
+		});
+	});
+	//console.log(rowspans);
+	
 };
 
 dtable.get_table_id = function($form)
@@ -414,20 +421,20 @@ dtable.new_build_form = function($form, $row, action, value, row_data, colspan_c
 
 	var rowspans = [];
 	var rowspans_keys = [];
-	var rows_before = 1;
+	var rows_after = 0;
 	//found rowspans mother cells
-	jQuery($this_row.next().prevAll().get().reverse()).each(
+	$this_row.next().prevAll().each(
 		function() {
 			jQuery(this).find("td, th").each(function()
 				{
 					var rowspan = jQuery(this).attr("rowspan");
-					if (typeof rowspan !== 'undefined' && rowspan !== false && parseInt(rowspan) >= rows_before+1) {
+					if (typeof rowspan !== 'undefined' && rowspan !== false && parseInt(rowspan) > rows_after) {
 						var ind = jQuery(this).index();
 						rowspans[ind] = jQuery(this);
 						rowspans_keys.push(ind);
 					}
 				});
-				rows_before++;
+				rows_after++;
 		});
 	rowspans_keys.sort();
 
@@ -436,6 +443,8 @@ dtable.new_build_form = function($form, $row, action, value, row_data, colspan_c
 	var col = 0;
 	var rowsp_cell_ind = 0;
 
+	console.log(rowspans);
+	console.log(rowspans_keys);
 
 	for(var i = 0; i < row_data.length; i++)
 	{
@@ -458,10 +467,12 @@ dtable.new_build_form = function($form, $row, action, value, row_data, colspan_c
 
 		/*console.log(content);
 			console.log(rowspans_keys[rowsp_cell_ind]);*/
-		if (content == ':::')
+		if (jQuery.trim(content) == ':::')
 		{
 			var $mother_cell = rowspans[rowspans_keys[rowsp_cell_ind]];
 			var width = $mother_cell.width();
+			if (width < 20)
+				width = 20;
 			rowsp_cell_ind++;
 			jQuery('<textarea class="'+tclass+' rowspans" name="col' + col +'">').val(content).width(width).css({'position': 'relative', 'display': 'block'}).appendTo($mother_cell);
 			col++;
@@ -568,10 +579,11 @@ dtable.remove = function($this_row) {
 	      var res = jQuery.parseJSON(data);
 	      if(res.type == 'success')
 	      {
-			$this_row.remove();
 			var rows_data = $form.data("table");
 			rows_data.splice(dtable.get_row_id($table, $this_row), 1);
 			$form.data("table", rows_data);
+			
+			$this_row.remove();
 
 			//change rows in case of rowspan
 			dtable.change_rows($table, res.rowspans);
@@ -614,6 +626,13 @@ dtable.contex_handler = function(e) {
 
     //hide current form
     var ev = jQuery(this).attr("href");
+
+	//check any form in any table
+	jQuery(".form_row").each(function() {
+		$this_table = jQuery(this).closest("table");
+		$this_table.find("tr:hidden").show();
+		dtable.hide_form($this_table);
+	});
 
     switch(ev)
     {
@@ -710,20 +729,19 @@ dtable.contex_handler = function(e) {
 		//$edit_link.unbind('click');
 		//$edit_link.click( 
 
-		//ten mechanizm jest do poprawy nie działą tak jak powinien, a pozatym nie obejmuje dodawnaia
-		var old_row = $this_row;
+		/*var old_row = $this_row;
 		//jQuery("#dtable_context_menu").undelegate("a", "click");
 		jQuery("#dtable_context_menu").delegate("a", "click", 
 			function(e)
 			{
-			    //dtable.hide_form($table);  
+			    dtable.hide_form($table);  
 
 			    /*$table.find(".form_row").find("input, textarea").val('');
 			    $form.find(".dtable_action").attr("name", "add").attr("value", "-1");*/
 
-			    old_row.show();
+			   /* old_row.show();
 			    dtable.contex_handler(e);
-			});
+			});*/
 	break;
 	case '#insert_after':
 
@@ -755,7 +773,7 @@ dtable.contex_handler = function(e) {
 				insert_colspan_callback,
 				function(cclass, rowspan, colspan, value)
 			    {
-					if (value !== ':::')
+					if (jQuery.trim(value) !== ':::')
 						value = '';
 					if (typeof rowspan !== 'undefined' && rowspan !== false && rowspan > 1) {
 						rowspan = 1;
@@ -789,7 +807,7 @@ dtable.contex_handler = function(e) {
 			var mod_row_call = 
 				function(cclass, rowspan, colspan, value)
 			    {
-					if (value !== ':::')
+					if (jQuery.trim(value) !== ':::')
 						value = '';
 					if (typeof rowspan !== 'undefined' && rowspan !== false && rowspan > 1) {
 						rowspan = 1;
@@ -803,7 +821,7 @@ dtable.contex_handler = function(e) {
 			var mod_row_call = 
 				function(cclass, rowspan, colspan, value)
 			    {
-					if (value !== ':::')
+					if (jQuery.trim(value) !== ':::')
 						value = '';
 					if (typeof rowspan !== 'undefined' && rowspan !== false && rowspan > 1) {
 						rowspan = 1;
@@ -932,7 +950,7 @@ jQuery(".dtable").submit(
 					//if row is empty it isn't submited during adding and it's deleting during editing
 
 					if (jQuery(this).attr("class") != null && jQuery(this).attr("name").indexOf("col") == 0) {
-						if (jQuery(this).val() != "" && jQuery(this).val() != ':::')
+						if (jQuery(this).val() != "" && jQuery.trim(jQuery(this).val()) != ':::')
 							any_data = true;
 						data[jQuery(this).attr("name")] = JSON.stringify([jQuery(this).attr("class"), jQuery(this).val()]);
 					} else
@@ -967,8 +985,12 @@ jQuery(".dtable").submit(
 							  
 							  var raw_rows = $form.data('table');
 
-							  raw_rows[index] = res.raw_row;
-							  $form.data('table', raw_rows);
+							  if (res.action == 'edit') {
+								  raw_rows[index] = res.raw_row;
+							  } else {
+								  raw_rows.splice(index, 0, res.raw_row);
+							  }
+								  $form.data('table', raw_rows);
 						  }
 
 						  dtable.hide_form($form);

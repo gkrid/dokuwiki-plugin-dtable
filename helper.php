@@ -56,9 +56,8 @@ class helper_plugin_dtable extends dokuwiki_plugin
 		}
 		return $line_nr;
     }
-	function rows($row, $page_id)
+	function get_rows_instructions($row, $page_id)
 	{
-
 		$lexer_rules = p_get_metadata($page_id, 'plugin_dtable_lexer_rules');
 
 		$Parser = new Doku_Parser();
@@ -90,7 +89,11 @@ class helper_plugin_dtable extends dokuwiki_plugin
 
 		$Parser->addMode('table', new Doku_Parser_Mode_table());
 
-		$instr = $Parser->parse($row);
+		return $Parser->parse($row);
+	}
+	function rows($row, $page_id)
+	{
+		$instr = helper_plugin_dtable::get_rows_instructions($row, $page_id);
 
 		$table_cells = array();
 		//$span = array( 'row' => array() , 'cell' => array() );
@@ -122,8 +125,40 @@ class helper_plugin_dtable extends dokuwiki_plugin
 		else
 			return false;
 	}*/
-	function get_rowspans($start_line_str, $table_line, $dtable_start_line, $page_lines, $page_id)
+	//function get_rowspans($start_line_str, $table_line, $dtable_start_line, $page_lines, $page_id)
+	function get_rowspans($start_line, $page_lines, $page_id)
 	{
+		$len = 1;
+		while (strpos($page_lines[$start_line + $len], '|') === 0 || strpos($page_lines[$start_line + $len], '^') === 0)
+			$len++;
+		$table_lines = array_splice($page_lines, $start_line, $len);
+
+		$table = implode("\n", $table_lines);
+
+		$instr = helper_plugin_dtable::get_rows_instructions($table, $page_id);
+
+		$table_rowspans = array();
+		//$span = array( 'row' => array() , 'cell' => array() );
+
+		$row = 0;
+		$cell = 0;
+		for($i = 2; $i < count($instr) - 2; $i++)
+		{
+			if ($instr[$i][0] == 'tablecell_open' || $instr[$i][0] == 'tableheader_open')
+			{
+				$rowspan = $instr[$i][1][2];
+				$table_rowspans[$row][$cell] = $rowspan;
+				$cell++;
+			} elseif($instr[$i][0] == 'tablerow_open') {
+				$table_rowspans[$row] = array();
+				$cell = 0;
+			} elseif($instr[$i][0] == 'tablerow_close') {
+				$row++;
+			}
+		}
+
+		return $table_rowspans;
+
 		/*$table_rows =  count( helper_plugin_dtable::rows($start_line_str, $page_id) );
 		$rowspans = array();
 
@@ -244,7 +279,7 @@ class helper_plugin_dtable extends dokuwiki_plugin
 
 		$line = helper_plugin_dtable::format_row($cells);*/
 		
-		$line = str_replace(':::|', '', $line);
+		$line = preg_replace('/\s*:::\s*\|/', '', $line);
 
 
 		$info = array();
