@@ -827,7 +827,7 @@ jQuery(".dtable").submit(
 				   });
 			} else {
 				if (action == "edit") {
-					$this_row = $form.find("tr:hidden")
+					$this_row = $form.find("tr:hidden");
 					dtable.remove($this_row);
 					$this_row.remove();
 				}
