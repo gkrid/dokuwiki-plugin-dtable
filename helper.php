@@ -33,6 +33,37 @@ class helper_plugin_dtable extends dokuwiki_plugin
 	'params' => array('file_path' => 'string', 'pos' => 'int'),
 	'return' => array('line_nr' => 'int'),
       );
+      $result[] = array(
+	'name'   => 'get_rows_instructions',
+	'desc'   => 'Parse table rows by copy handler.',
+	'params' => array('row' => 'string', 'pos' => 'int'),
+	'return' => array('output' => 'array'),
+      );
+      $result[] = array(
+	'name'   => 'rows',
+	'desc'   => 'Parse single table row using copy handler.',
+	'params' => array('row' => 'string', 'page_id' => 'string'),
+	'return' => array('table_cells' => 'array'),
+      );
+      $result[] = array(
+	'name'   => 'get_rowspans',
+	'desc'   => 'Get rowspans attributes of dokuwiki tables cells.',
+	'params' => array('start_line' => 'int', 'page_lines' => 'array', 'page_id' => 'string'),
+	'return' => array('table_rowspans' => 'array'),
+      );
+      $result[] = array(
+	'name'   => 'format_row',
+	'desc'   => 'Build dokuwiki raw row from array',
+	'params' => array('array_line' => 'array'),
+	'return' => array('line' => 'array'),
+      );
+      $result[] = array(
+	'name'   => 'parse_line',
+	'desc'   => 'Parse dokuwiki table line into html',
+	'params' => array('line' => 'string', 'page_id' => 'string'),
+	'return' => array('output' => 'string'),
+      );
+	  return $result;
     }
     function error($code, $json=false)
     {
@@ -96,7 +127,6 @@ class helper_plugin_dtable extends dokuwiki_plugin
 		$instr = helper_plugin_dtable::get_rows_instructions($row, $page_id);
 
 		$table_cells = array();
-		//$span = array( 'row' => array() , 'cell' => array() );
 
 		//first table cell is 3 next 6 ...
 		$i = 3;
@@ -110,22 +140,7 @@ class helper_plugin_dtable extends dokuwiki_plugin
 		}
 
 		return $table_cells;
-		//return array( $table_cells, $span );
 		}
-	/*function has_triple_colon($row, $col_nr)
-	{
-
-		if(strpos($row, '|') !== 0)
-			return false;
-
-		$row_array = explode('|', substr($row, 1, -1));
-
-		if($row_array[$col_nr] == ':::')
-			return true;
-		else
-			return false;
-	}*/
-	//function get_rowspans($start_line_str, $table_line, $dtable_start_line, $page_lines, $page_id)
 	function get_rowspans($start_line, $page_lines, $page_id)
 	{
 		$len = 1;
@@ -138,7 +153,6 @@ class helper_plugin_dtable extends dokuwiki_plugin
 		$instr = helper_plugin_dtable::get_rows_instructions($table, $page_id);
 
 		$table_rowspans = array();
-		//$span = array( 'row' => array() , 'cell' => array() );
 
 		$row = 0;
 		$cell = 0;
@@ -159,89 +173,6 @@ class helper_plugin_dtable extends dokuwiki_plugin
 
 		return $table_rowspans;
 
-		/*$table_rows =  count( helper_plugin_dtable::rows($start_line_str, $page_id) );
-		$rowspans = array();
-
-
-		for( $j = 0; $j < $table_rows; $j++ )
-		{
-			if( helper_plugin_dtable::has_triple_colon($start_line_str, $j) )
-			{
-				$rowspan_val = 1;
-				$i = $table_line - 1;
-				$line = $page_lines[ $i + $dtable_start_line ];
-				while( helper_plugin_dtable::has_triple_colon($line, $j) )
-				{
-					$i--;
-					$rowspan_val++;
-
-					$line = $page_lines[ $i + $dtable_start_line ];
-				}
-				//eq can be negative becouse $dtable_start_line is 0 for first row that isn't th
-				$eq = $i;
-
-				$i = $table_line ;//+1
-				$line = $page_lines[ $i + $dtable_start_line ];
-
-
-				while( helper_plugin_dtable::has_triple_colon($line, $j) )
-				{
-					$i++;
-					$rowspan_val++;
-					$line = $page_lines[ $i + $dtable_start_line ];
-				}
-				$rowspans[] = array('tr' => $eq, 'td' => $j, 'val' => $rowspan_val);
-
-			} else
-			{
-				$next_line = $page_lines[ $table_line + 1 +$dtable_start_line ];
-				if( helper_plugin_dtable::has_triple_colon($next_line, $j) )
-				{
-					//$eq = $table_line - 1;
-					
-					$rowspan_val = 2;
-
-					$i = $table_line - 1;
-					$line = $page_lines[ $i + $dtable_start_line ];
-					while( helper_plugin_dtable::has_triple_colon($line, $j) )
-					{
-					$i--;
-					$rowspan_val++;
-
-					$line = $page_lines[ $i + $dtable_start_line ];
-					}
-					//eq can be negative becouse $dtable_start_line is 0 for first row that isn't th
-					$eq = $i;
-
-					$i = $table_line + 2;
-
-					$line = $page_lines[ $i + $dtable_start_line ];
-					while( helper_plugin_dtable::has_triple_colon($line, $j) )
-					{
-					$i++;
-					$rowspan_val++;
-					
-					$line = $page_lines[ $i + $dtable_start_line ];
-					}
-					$rowspans[] = array('tr' => $eq, 'td' => $j, 'val' => $rowspan_val);
-				}
-			}
-		}
-
-		for( $j = 0; $j < count( $rowspans ); $j++)
-		{
-			if( $row = helper_plugin_dtable::rows($page_lines [ $rowspans[$j]['tr'] + $dtable_start_line ], $page_id ) )
-			{
-			for( $i = 0; $i < $rowspans[$j]['td']; $i++ )
-			{
-				if( $row[ $i ] == ':::' )
-				{
-				$rowspans[$j]['td']--;
-				}
-			}
-			}
-		}
-		return $rowspans;*/
 	}
     function format_row($array_line)
     {
@@ -268,17 +199,6 @@ class helper_plugin_dtable extends dokuwiki_plugin
     }
     function parse_line($line, $page_id)
     {
-		/*$rows = helper_plugin_dtable::rows($line, $page_id);
-
-		$cells = array();
-		foreach($rows as $row)
-		{
-			if($row[1] != ':::')
-			$cells[] = $row;
-		}
-
-		$line = helper_plugin_dtable::format_row($cells);*/
-		
 		$line = preg_replace('/\s*:::\s*\|/', '', $line);
 
 

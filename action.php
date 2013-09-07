@@ -87,12 +87,9 @@ class action_plugin_dtable extends DokuWiki_Action_Plugin {
     function load_lexer_rules(&$event, $param)
     {
 	//files contianging lexer commands
-//	$files = array(DOKU_INC.'inc/parser/parser.php');
 	$files = array();
 
 	$type = 'syntax';
-	//$pluginlist = plugin_list($type);
-	//$plugin_files = array();
 	//get from plugincontroller.class.php 
 	
 	$doku_plugin_dir = opendir(DOKU_PLUGIN);
@@ -358,8 +355,6 @@ class action_plugin_dtable extends DokuWiki_Action_Plugin {
 
 	    $dtable =& plugin_load('helper', 'dtable');
 
-	    //$dtable::$lexer_rules = p_get_metadata($dtable_page_id, 'plugin_dtable_lexer_rules');
-
 	    $page_lines = explode( "\n", io_readFile( $file ) );
 
 	    if(isset($_POST['remove']))
@@ -443,32 +438,6 @@ class action_plugin_dtable extends DokuWiki_Action_Plugin {
 
 			echo $json->encode( array('type' => 'success', 'action' => $action, 'new_row' => $dtable->parse_line($new_line, $dtable_page_id), 'raw_row' => $new_table_line, 'rowspans' =>  $dtable->get_rowspans($dtable_start_line, $page_lines, $dtable_page_id) ) );
 
-				/*$table_line = (int) $_POST['edit'];
-				$line_to_change = $dtable_start_line + $table_line;
-
-				$new_table_line = array();
-				foreach( $_POST as $k => $v )
-				{
-					if( strpos( $k, 'col' ) === 0)
-					{
-						//remove col from col12, col1 etc. to be 12 1
-						$new_table_line[(int)substr($k, 3)] = $json->decode($v);
-					}
-				}
-				ksort($new_table_line);
-
-				$new_line = $dtable->format_row($new_table_line);
-
-				$old_line = $page_lines[ $line_to_change ];
-
-				$page_lines[ $line_to_change ] = $new_line;
-
-				$new_cont = implode( "\n", $page_lines );
-
-				$info = str_replace( array('%o', '%n'), array($old_line, $new_line), $this->getLang('summary_edit') );
-				saveWikiText($dtable_page_id, $new_cont, $info);*/
-
-				//echo $json->encode( array('type' => 'alternate_success', 'new_row' => $dtable->parse_line($new_line, $dtable_page_id), 'raw_row' => $new_table_line, 'rowspans' =>  $dtable->get_rowspans($new_line, $table_line, $dtable_start_line, $page_lines, $dtable_page_id) ) );
 		}
 	break;
 	case 'dtable_page_lock':

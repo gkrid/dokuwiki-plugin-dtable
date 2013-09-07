@@ -1,7 +1,9 @@
 /* Generic context menu styles */
 #dtable_context_menu {
 	position: absolute;
-	width: 340px;
+	/*For funthure options*/
+	/*width: 340px;*/
+	width: 140px;
 	z-index: 99999;
 	border: solid 1px #CCC;
 	background: #EEE;
