@@ -402,9 +402,6 @@ dtable.new_build_form = function($form, $row, action, value, row_data, colspan_c
 	var col = 0;
 	var rowsp_cell_ind = 0;
 
-	console.log(rowspans);
-	console.log(rowspans_keys);
-
 	for(var i = 0; i < row_data.length; i++)
 	{
 		var tclass = row_data[i][0]; 
@@ -414,7 +411,6 @@ dtable.new_build_form = function($form, $row, action, value, row_data, colspan_c
 		var $father_cell = $row.find("td, th").eq(td_index);
 		var rowspan = $father_cell.attr('rowspan');
 
-		//console.log(mod_cell_callback);
 		if (mod_cell_callback !== undefined) {
 			var mod = mod_cell_callback.call(this, tclass, rowspan, colspan, content);
 
