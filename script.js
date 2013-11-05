@@ -545,10 +545,11 @@ dtable.contex_handler = function(e) {
 	break;
 	case '#edit':
 
+		var row_id = dtable.get_row_id($table, $this_row);
 		var rows_data = $form.data("table");
-		var rows = rows_data[dtable.get_row_id($table, $this_row)];
+		var rows = rows_data[row_id];
 
-		dtable.new_build_form($form, $this_row, "edit", dtable.get_row_id($table, $this_row), rows,
+		dtable.new_build_form($form, $this_row, "edit", row_id, rows,
 				function($form_row, colspan,  width, height, tclass, col, content) {
 					$form_cell = jQuery('<td>').attr({'colspan': colspan});
 
@@ -597,10 +598,11 @@ dtable.contex_handler = function(e) {
 	break;
 	case '#insert_after':
 
+		var row_id = dtable.get_row_id($table, $this_row);
 		var rows_data = $form.data("table");
-		var rows = rows_data[dtable.get_row_id($table, $this_row)];
+		var rows = rows_data[row_id];
 
-		dtable.new_build_form($form, $this_row, "add", dtable.get_row_id($table, $this_row), rows, 
+		dtable.new_build_form($form, $this_row, "add", row_id, rows, 
 				insert_colspan_callback,
 				function(cclass, rowspan, colspan, value)
 			    {
@@ -764,7 +766,7 @@ jQuery(".dtable").submit(
 				function()
 				{
 
-					//if row is empty it isn't submited during adding and it's deleting during editing
+					//if row is empty it isn't submited during adding and it's deleted during editing
 
 					if (jQuery(this).attr("class") != null && jQuery(this).attr("name").indexOf("col") == 0) {
 						if (jQuery(this).val() != "" && jQuery.trim(jQuery(this).val()) != ':::')
@@ -787,7 +789,8 @@ jQuery(".dtable").submit(
 						  if( res.new_row !== undefined )
 						  {
 							  //remove old element
-							  $form.find("tr:hidden").remove();
+						      if (action == "edit")
+								  $form.find(".form_row").prev().remove();
 
 							  var $table = $form.find("table");
 
@@ -823,11 +826,11 @@ jQuery(".dtable").submit(
 				   });
 			} else {
 				if (action == "edit") {
-					$this_row = $form.find("tr:hidden");
+					$this_row = $form.find(".form_row").prev();
 					dtable.remove($this_row);
 					$this_row.remove();
 				}
-				  dtable.hide_form($form);
+				dtable.hide_form($form);
 				dtable.form_processing = false;
 			}
 	    }

@@ -2,3 +2,8 @@ link__wiz window doesn't working perfect:
   - when you change the row and save your changes link_wiz window won't hide.
   - window remember last open position so when you edit long table it would be very anoying.
   - link_wiz is show behind edit buttons
+[bug] dtable nie działa jeżeli tabelka nie rozpoczyna się bezpośredino po znaczniku. Np.
+	<dtable>
+	
+	|to|nie|zadziała|
+	</dtable>
