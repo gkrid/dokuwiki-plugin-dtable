@@ -366,8 +366,6 @@ dtable.get_table_id = function($form)
 
 dtable.new_build_form = function($form, $row, action, value, row_data, colspan_callback, mod_cell_callback)
 {
-    
-
 	$form_row = jQuery('<tr class="form_row">').hide().appendTo( $form.find("table") );
 
 	if ($form.find("input.dtable_action").length > 0)
@@ -789,7 +787,6 @@ jQuery(".dtable").submit(
 				{
 
 					//if row is empty it isn't submited during adding and it's deleted during editing
-
 					if (jQuery(this).attr("class") != null && jQuery(this).attr("name").indexOf("col") == 0) {
 						if (jQuery(this).val() != "" && jQuery.trim(jQuery(this).val()) != ':::')
 							any_data = true;
@@ -825,13 +822,14 @@ jQuery(".dtable").submit(
 							  var index = dtable.get_row_id($table, $new_elm);
 							  
 							  var raw_rows = $form.data('table');
+							  //console.log(raw_rows);
 
 							  if (res.action == 'edit') {
 								  raw_rows[index] = res.raw_row;
 							  } else {
 								  raw_rows.splice(index, 0, res.raw_row);
 							  }
-								  $form.data('table', raw_rows);
+							  $form.data('table', raw_rows);
 						  }
 
 						  dtable.hide_form($form);

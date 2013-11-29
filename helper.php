@@ -166,30 +166,10 @@ class helper_plugin_dtable_handler {
 	}
 
     function table($match, $state, $pos) {
-		//dbglog("ALA I AS");
-		//dbglog($match);
-		////dbglog($state);
-		//dbglog($pos);
-		//dbglog("ALA I AS END");
         switch ( $state ) {
 
             case DOKU_LEXER_ENTER:
 
-/*                $ReWriter = new Doku_Handler_Table($this->CallWriter);
-                $this->CallWriter = & $ReWriter;
-
-                $this->_addCall('table_start', array($pos + 1), $pos);
-                if ( trim($match) == '^' ) {
-                    $this->_addCall('tableheader', array(), $pos);
-                } else {
-                    $this->_addCall('tablecell', array(), $pos);
-				}*/
-                /*$this->_addCall('table_start', array($pos + 1), $pos);
-                if ( trim($match) == '^' ) {
-                    $this->_addCall('tableheader', array(), $pos);
-                } else {
-                    $this->_addCall('tablecell', array(), $pos);
-				}*/
 				$type = trim($match);
 
 				$this->calls = array();
@@ -198,23 +178,10 @@ class helper_plugin_dtable_handler {
 
 				$this->calls[$this->row][0][$this->cell] = array(1, 1, $type, '');
 				$this->calls[$this->row][1][0] = $line;
-				/*dbglog("MONGO2");
-				//dbglog($pos);
-				//dbglog($this->start_line);
-				dbglog($line);
-				exit(0);
-				dbglog("EEND MONGO2");*/
 
             break;
 
             case DOKU_LEXER_EXIT:
-                //$this->_addCall('table_end', array($pos), $pos);
-                //$this->CallWriter->process();
-                //$ReWriter = & $this->CallWriter;
-				//$this->CallWriter = & $ReWriter->CallWriter;
-				/*if (is_array($this->calls)) {
-					$this->calls[$this->row][1] = array_unique($this->calls[$this->row][1]);
-				}*/
 				$line = helper_plugin_dtable::line_nr($pos, $this->file_path, $this->start_line);
 				$this->calls[$this->row][1][1] = $line - 1;
 
@@ -222,53 +189,18 @@ class helper_plugin_dtable_handler {
             break;
 
             case DOKU_LEXER_UNMATCHED:
-                /*if ( trim($match) != '' ) {
-                    $this->_addCall('cdata',array($match), $pos);
-				}*/
 				if (is_array($this->calls)) {
 					if ( trim($match) != '' ) {
 
 						$this->calls[$this->row][0][$this->cell][3] .= $match;
-							//$this->calls[$this->row][1][] = helper_plugin_dtable::line_nr($pos, $this->file_path, $this->start_line);
-							//$this->calls[$this->row][0][$this->cell][3 = array(0, 0, $this->type, $match);
-
-					} /*else {
-						//colspan
-						$this->calls[$this->row][0][$this->cell][0]++;
-					}*/
+					} 
 				}
             break;
 
             case DOKU_LEXER_MATCHED:
-                /*if ( $match == ' ' ){
-                    $this->_addCall('cdata', array($match), $pos);
-                } else if ( preg_match('/:::/',$match) ) {
-                    $this->_addCall('rowspan', array($match), $pos);
-                } else if ( preg_match('/\t+/',$match) ) {
-                    $this->_addCall('table_align', array($match), $pos);
-                } else if ( preg_match('/ {2,}/',$match) ) {
-                    $this->_addCall('table_align', array($match), $pos);
-                } else if ( $match == "\n|" ) {
-                    $this->_addCall('table_row', array(), $pos);
-                    $this->_addCall('tablecell', array(), $pos);
-                } else if ( $match == "\n^" ) {
-                    $this->_addCall('table_row', array(), $pos);
-                    $this->_addCall('tableheader', array(), $pos);
-                } else if ( $match == '|' ) {
-                    $this->_addCall('tablecell', array(), $pos);
-                } else if ( $match == '^' ) {
-                    $this->_addCall('tableheader', array(), $pos);
-				}
-				 */
-				/*////dbglog(var_export("MONGO", true));
-				////dbglog(var_export($this->calls, true));
-				////dbglog(var_export($match, true));*/
                 if ( preg_match('/:::/',$match) ) {
 					$this->calls[$this->row][0][$this->cell][3] .= $match;
 				} else if ( $match == ' ' ){
-					/*$this->cell++;
-					$this->calls[$this->row][0][$this->cell] = array(0, 0, $this->type, $match);
-					$this->calls[$this->row][1][] = helper_plugin_dtable::line_nr($pos, $this->file_path, $this->start_line);*/
 					$this->calls[$this->row][0][$this->cell][3] .= $match;
 				} else {
 					$row = $this->row;
@@ -305,7 +237,6 @@ class helper_plugin_dtable_handler {
 						$this->calls[$this->row][0][$this->cell] = array(1, 1, $type, '');
 
 					}
-					//$this->calls[$this->row][1][] = helper_plugin_dtable::line_nr($pos, $this->file_path, $this->start_line) - 1;
 				}
             break;
         }
@@ -320,9 +251,6 @@ class helper_plugin_dtable_handler {
 	*/
     public function __call($name, $params) {
         if (count($params) == 3) {
-			/*//dbglog($name);
-			//dbglog('start line:,'.helper_plugin_dtable::line_nr($params[2], $this->file_path, $this->start_line));
-			//dbglog($params[2]);*/
 			$this->calls[$this->row][0][$this->cell][3] .= $params[0];
 			//$this->calls[$this->row][1][] = helper_plugin_dtable::line_nr($params[2], $this->file_path, $this->start_line);
             return true;
@@ -332,15 +260,6 @@ class helper_plugin_dtable_handler {
         }
     }
 	public function _finalize() {
-		// remove padding that is added by the parser in parse()
-        //$this->calls = substr($this->calls, 1, -1);
-	
-		//Unique lines of rows
-		//var_dump($this->calls, $this->row);
-		
-		/*for ($i = 0; $i <= $this->row; $i++)
-		$this->calls[$i][1] = array_unique($this->calls[$i][1]);*/
-
 		//remove last cell and -- the celsapn it doesn't exist
 		array_pop($this->calls[$this->row][0]);
 

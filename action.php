@@ -23,7 +23,6 @@ class action_plugin_dtable extends DokuWiki_Action_Plugin {
 	    $controller->register_hook('AJAX_CALL_UNKNOWN', 'BEFORE',  $this, 'handle_ajax');
 	    $controller->register_hook('PARSER_WIKITEXT_PREPROCESS', 'AFTER',  $this, 'parser_preprocess_handler');
 
-	    //$controller->register_hook('PARSER_METADATA_RENDER', 'AFTER',  $this, 'load_lexer_rules');
     }
     function parser_preprocess_handler(&$event, $parm)
     {
@@ -190,11 +189,11 @@ class action_plugin_dtable extends DokuWiki_Action_Plugin {
 					if ($value == '' && $j >= 1)
 						$new_table_line[$j-1][1]++;
 					else {
-						$new_table_line[$j] = array($class, 1, $value);
+						$type = $class == 'tablecell_open' ? '|' : '^';
+						$new_table_line[$j] = array(1, 1, $type, $value);
 						$j++;
 					}
 			}
-
 			$new_line = $dtable->format_row($cols);
 
 			if( isset( $_POST['add'] ) )
@@ -235,7 +234,7 @@ class action_plugin_dtable extends DokuWiki_Action_Plugin {
 			$new_cont = implode( "\n", $page_lines );
 			saveWikiText($dtable_page_id, $new_cont, $info);
 
-			echo $json->encode( array('type' => 'success', 'action' => $action, 'new_row' => $dtable->parse_line($new_line, $dtable_page_id), 'raw_row' => $new_table_line, 'spans' =>  $dtable->get_spans($dtable_start_line, $page_lines, $dtable_page_id) ) );
+			echo $json->encode( array('type' => 'success', 'action' => $action, 'new_row' => $dtable->parse_line($new_line, $dtable_page_id), 'raw_row' => array($new_table_line, array(1, 1)), 'spans' =>  $dtable->get_spans($dtable_start_line, $page_lines, $dtable_page_id) ) );
 
 		}
 	break;
