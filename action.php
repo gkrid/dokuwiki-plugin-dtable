@@ -23,7 +23,7 @@ class action_plugin_dtable extends DokuWiki_Action_Plugin {
 	    $controller->register_hook('AJAX_CALL_UNKNOWN', 'BEFORE',  $this, 'handle_ajax');
 	    $controller->register_hook('PARSER_WIKITEXT_PREPROCESS', 'AFTER',  $this, 'parser_preprocess_handler');
 
-	    $controller->register_hook('PARSER_METADATA_RENDER', 'AFTER',  $this, 'load_lexer_rules');
+	    //$controller->register_hook('PARSER_METADATA_RENDER', 'AFTER',  $this, 'load_lexer_rules');
     }
     function parser_preprocess_handler(&$event, $parm)
     {
@@ -84,7 +84,7 @@ class action_plugin_dtable extends DokuWiki_Action_Plugin {
 		} 
 		$event->data = implode("\n", $new_lines);
     }
-    function load_lexer_rules(&$event, $param)
+    /*function load_lexer_rules(&$event, $param)
     {
 	//files contianging lexer commands
 	$files = array();
@@ -299,7 +299,7 @@ class action_plugin_dtable extends DokuWiki_Action_Plugin {
 	}
 
 	$event->data['current']['plugin_dtable_lexer_rules'] = $lexer_rules;
-    }
+}*/
     function add_php_data(&$event, $param) {
 	global $JSINFO, $ID;
 
@@ -359,20 +359,29 @@ class action_plugin_dtable extends DokuWiki_Action_Plugin {
 
 	    if(isset($_POST['remove']))
 	    {
-			$table_line = (int) $_POST['remove'];
+			$scope = $json->decode($_POST['remove']);
 
-			$line_to_remove = $dtable_start_line + $table_line;
+			$lines_to_remove = array();
+			for ($i = $scope[0]; $i <= $scope[1]; $i++)
+				$lines_to_remove[] = $i;
 
-			$removed_line = $page_lines[ $line_to_remove ]; 
+			//$line_to_remove = $dtable_start_line + $table_line;
 
-			array_splice($page_lines, $line_to_remove, 1);
+			$removed_line = '';
+			foreach ($lines_to_remove as $line) {
+				$removed_line .= $page_lines[ $line ]." "; 
+			}
+
+			array_splice($page_lines, $scope[0], $scope[1] - $scope[0] + 1);
 
 			$new_cont = implode( "\n", $page_lines );
 
 			saveWikiText($dtable_page_id, $new_cont, $this->getLang('summary_remove').' '.$removed_line);
 
 
-			echo $json->encode( array('type' => 'success', 'rowspans' =>  $dtable->get_rowspans($dtable_start_line, $page_lines, $dtable_page_id) ) );
+
+			echo $json->encode( array('type' => 'success', 'spans' =>  
+						$dtable->get_spans($dtable_start_line, $page_lines, $dtable_page_id) ) );
 
 		} else
 		{
@@ -421,12 +430,27 @@ class action_plugin_dtable extends DokuWiki_Action_Plugin {
 			{
 				$action = 'edit';
 
-				$table_line = (int) $_POST['edit'];
-				$line_to_change = $dtable_start_line + $table_line;
+				//$table_line = (int) $_POST['edit'];
+				//$line_to_change = $dtable_start_line + $table_line;
+
+				$scope = $json->decode($_POST['edit']);
+
+				$lines_to_change = array();
+				for ($i = $scope[0]; $i <= $scope[1]; $i++)
+					$lines_to_charge[] = $i;
+
+				//$line_to_remove = $dtable_start_line + $table_line;
+
+				$old_line= '';
+				foreach ($lines_to_change as $line) {
+					$old_line .= $page_lines[ $line ]." "; 
+				}
 
 				$old_line = $page_lines[ $line_to_change ];
 
-				$page_lines[ $line_to_change ] = $new_line;
+				array_splice($page_lines, $scope[0], $scope[1] - $scope[0] + 1, $new_line);
+
+				//$page_lines[ $line_to_change ] = $new_line;
 
 				$new_cont = implode( "\n", $page_lines );
 
@@ -436,7 +460,7 @@ class action_plugin_dtable extends DokuWiki_Action_Plugin {
 			$new_cont = implode( "\n", $page_lines );
 			saveWikiText($dtable_page_id, $new_cont, $info);
 
-			echo $json->encode( array('type' => 'success', 'action' => $action, 'new_row' => $dtable->parse_line($new_line, $dtable_page_id), 'raw_row' => $new_table_line, 'rowspans' =>  $dtable->get_rowspans($dtable_start_line, $page_lines, $dtable_page_id) ) );
+			echo $json->encode( array('type' => 'success', 'action' => $action, 'new_row' => $dtable->parse_line($new_line, $dtable_page_id), 'raw_row' => $new_table_line, 'spans' =>  $dtable->get_spans($dtable_start_line, $page_lines, $dtable_page_id) ) );
 
 		}
 	break;

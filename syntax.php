@@ -12,6 +12,7 @@ if(!defined('DOKU_INC')) die();
 if(!defined('DOKU_PLUGIN')) define('DOKU_PLUGIN',DOKU_INC.'lib/plugins/');
 require_once DOKU_PLUGIN.'syntax.php';
 
+
 /**
  * All DokuWiki plugins to extend the parser/rendering mechanism
  * need to inherit from this class
@@ -68,7 +69,7 @@ class syntax_plugin_dtable extends DokuWiki_Syntax_Plugin {
 			$id = $dtable_pages[$table_nr];
 			$filepath = wikiFN( $id );
 
-			$start_line = $dtable->line_nr($filepath, $pos) ;
+			$start_line = $dtable->line_nr($pos, $filepath) ;
 
 			//search for first row 
 			$file_cont = explode("\n", io_readWikiPage($filepath, $id));
@@ -76,16 +77,23 @@ class syntax_plugin_dtable extends DokuWiki_Syntax_Plugin {
 			$start_line++;
 
 			$i = $start_line;
-			$raw_lines = array();
-			while( $i <  count($file_cont) 
-				   && strpos( $file_cont[ $i ], '</dtable>' ) !== 0 )
+			while( $i <  count($file_cont) && strpos($file_cont[$i], '|') !== 0 && strpos($file_cont[$i], '^') !== 0)
+				$i += 1;
+			$start_line = $i;
+
+
+			$raw_lines = '';
+
+			while( $i <  count($file_cont) && strpos( $file_cont[ $i ], '</dtable>' ) !== 0 )
 			{
-				$raw_lines[] = $dtable->rows($file_cont[$i], $id);
+				$raw_lines .= $file_cont[$i]."\n";
 				$i++;
 			}
+			$lines = $dtable->rows($raw_lines, $id, $start_line);
+
 			$json = new JSON();
 
-			$renderer->doc .= '<form class="dtable dynamic_form" id="dtable_'.$start_line.'_'.$id.'" action="'.$DOKU_BASE.'lib/exe/ajax.php" method="post" data-table="'.htmlspecialchars($json->encode($raw_lines)).'">';
+			$renderer->doc .= '<form class="dtable dynamic_form" id="dtable_'.$start_line.'_'.$id.'" action="'.$DOKU_BASE.'lib/exe/ajax.php" method="post" data-table="'.htmlspecialchars($json->encode($lines)).'">';
 			$renderer->doc .= '<input type="hidden" value="dtable" name="call">';
 
 			//This is needed to correct linkwiz behaviour.

@@ -338,13 +338,18 @@ dtable.clear_all_intervals = function()
     }
 };
 
-dtable.change_rows = function($table, rowspans)
+dtable.change_rows = function($table, spans)
 {
-
 	$table.find("tr").each(function(index) {
 		jQuery(this).find("td, th").each(function(td_ind) {
-			if (rowspans[index][td_ind] !== 1) {
-				jQuery(this).attr("rowspan", rowspans[index][td_ind]);
+			if (spans[index][td_ind][0] !== 1) {
+				jQuery(this).attr("colspan", spans[index][td_ind][0]);
+			} else {
+				jQuery(this).removeAttr("colspan");
+			}
+
+			if (spans[index][td_ind][1] !== 1) {
+				jQuery(this).attr("rowspan", spans[index][td_ind][1]);
 			} else {
 				jQuery(this).removeAttr("rowspan");
 			}
@@ -367,14 +372,17 @@ dtable.new_build_form = function($form, $row, action, value, row_data, colspan_c
 
 	if ($form.find("input.dtable_action").length > 0)
    	{
-		jQuery($form).find("input.dtable_action").attr("name", action).val(value);
+		jQuery($form).find("input.dtable_action").attr("name", action).val(JSON.stringify(value));
 		jQuery($form).find("input[name=table]").val(dtable.get_table_id($form));
+	//	jQuery($form).find("input[name=lines]").val(JSON.stringify(row_data[1]));
+						
 	} else
    	{
 		//append dtable_action
-		jQuery($form).append('<input type="hidden" class="dtable_action" name="'+action+'" value="'+value+'">');
+		jQuery($form).append('<input type="hidden" class="dtable_action" name="'+action+'" value="'+JSON.stringify(value)+'">');
 		//append table name
 		jQuery($form).append('<input type="hidden" name="table" value="'+ dtable.get_table_id($form) +'">');
+	//	jQuery($form).append('<input type="hidden" name="lines" value="'+JSON.stringify(row_data[1])+'">');
 	}
 
 
@@ -402,14 +410,24 @@ dtable.new_build_form = function($form, $row, action, value, row_data, colspan_c
 	var col = 0;
 	var rowsp_cell_ind = 0;
 
-	for(var i = 0; i < row_data.length; i++)
+
+	var cells = row_data[0];
+	for(var i = 0; i < cells.length; i++)
 	{
-		var tclass = row_data[i][0]; 
-		var colspan = parseInt(row_data[i][1]); 
-		var content = row_data[i][2]; 
+		switch (cells[i][2]) {
+			case '^':
+				var tclass = 'tableheader_open';
+				break;
+			default:
+				var tclass = 'tablecell_open';
+				break;
+		}
+		var colspan = cells[i][0]; 
+		var rowspan = cells[i][1]; 
+		var content = cells[i][3]; 
 
 		var $father_cell = $row.find("td, th").eq(td_index);
-		var rowspan = $father_cell.attr('rowspan');
+		//var rowspan = $father_cell.attr('rowspan');
 
 		if (mod_cell_callback !== undefined) {
 			var mod = mod_cell_callback.call(this, tclass, rowspan, colspan, content);
@@ -472,15 +490,21 @@ dtable.new_build_form = function($form, $row, action, value, row_data, colspan_c
 	initToolbar(dtable.toolbar_id, dtable.textarea_id, toolbar);//??? - ale działa
 };
 
+dtable.get_lines = function ($form, id) {
+	var rows_data = $form.data("table");
+	return JSON.stringify(rows_data[id][1]);
+};
+
 dtable.remove = function($this_row) {
 	$form = $this_row.closest("form");
 	$table = $form.find("table");
 
+	var id = dtable.get_row_id($table, $this_row);
 	  jQuery.post(DOKU_BASE + 'lib/exe/ajax.php', 
 	  {
 	      'call': dtable.get_call($form),
 	      'table': dtable.get_table_id($form),
-	      'remove': dtable.get_row_id($table, $this_row)
+		  'remove': dtable.get_lines($form, id)
 	  },
 	  function(data)
 	  {
@@ -488,13 +512,13 @@ dtable.remove = function($this_row) {
 	      if(res.type == 'success')
 	      {
 			var rows_data = $form.data("table");
-			rows_data.splice(dtable.get_row_id($table, $this_row), 1);
+			rows_data.splice(id, 1);
 			$form.data("table", rows_data);
 			
 			$this_row.remove();
 
 			//change rows in case of rowspan
-			dtable.change_rows($table, res.rowspans);
+			dtable.change_rows($table, res.spans);
 
 
 	      } else
@@ -549,7 +573,7 @@ dtable.contex_handler = function(e) {
 		var rows_data = $form.data("table");
 		var rows = rows_data[row_id];
 
-		dtable.new_build_form($form, $this_row, "edit", row_id, rows,
+		dtable.new_build_form($form, $this_row, "edit", rows[1], rows,
 				function($form_row, colspan,  width, height, tclass, col, content) {
 					$form_cell = jQuery('<td>').attr({'colspan': colspan});
 
@@ -782,7 +806,6 @@ jQuery(".dtable").submit(
 				function(data)
 				{
 					  var res = jQuery.parseJSON(data);
-					  //left for comtability with dtableremote
 					  if(res.type == 'success')
 					  {
 						  
@@ -816,7 +839,7 @@ jQuery(".dtable").submit(
 						  dtable.hide_form($form);
 
 						  var $table = $form.find("table");
-						  dtable.change_rows($table, res.rowspans);
+						  dtable.change_rows($table, res.spans);
 
 					  } else
 					  {
