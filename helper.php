@@ -155,7 +155,6 @@ class helper_plugin_dtable_handler {
 	public $calls = NULL;
 	public $row = 0;
 	public $cell = 0;
-	//public $cell_start = false;
 	public $type;
 	public $file_path;
 	public $start_line;
@@ -250,19 +249,12 @@ class helper_plugin_dtable_handler {
 	* @return bool If parsing should be continue
 	*/
     public function __call($name, $params) {
-        if (count($params) == 3) {
-			$this->calls[$this->row][0][$this->cell][3] .= $params[0];
-			//$this->calls[$this->row][1][] = helper_plugin_dtable::line_nr($params[2], $this->file_path, $this->start_line);
-            return true;
-        } else {
-            trigger_error('Error, handler function '.hsc($name).' with '.count($params).' parameters called which isn\'t implemented', E_USER_ERROR);
-            return false;
-        }
+		$this->calls[$this->row][0][$this->cell][3] .= $params[0];
+		return true;
     }
 	public function _finalize() {
 		//remove last cell and -- the celsapn it doesn't exist
 		array_pop($this->calls[$this->row][0]);
-
 		$this->row = 0;
 		$this->cell = 0;
 	}

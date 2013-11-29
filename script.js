@@ -785,14 +785,15 @@ jQuery(".dtable").submit(
 			jQuery(this).find("textarea, input").each(
 				function()
 				{
-
-					//if row is empty it isn't submited during adding and it's deleted during editing
-					if (jQuery(this).attr("class") != null && jQuery(this).attr("name").indexOf("col") == 0) {
-						if (jQuery(this).val() != "" && jQuery.trim(jQuery(this).val()) != ':::')
-							any_data = true;
-						data[jQuery(this).attr("name")] = JSON.stringify([jQuery(this).attr("class"), jQuery(this).val()]);
-					} else
-						data[jQuery(this).attr("name")] = jQuery(this).val();
+					if (jQuery(this).parents(".plugin_include_content").length == 0) {
+						//if row is empty it isn't submited during adding and it's deleted during editing
+						if (jQuery(this).attr("class") != null && jQuery(this).attr("name").indexOf("col") == 0) {
+							if (jQuery(this).val() != "" && jQuery.trim(jQuery(this).val()) != ':::')
+								any_data = true;
+							data[jQuery(this).attr("name")] = JSON.stringify([jQuery(this).attr("class"), jQuery(this).val()]);
+						} else
+							data[jQuery(this).attr("name")] = jQuery(this).val();
+					}
 				});
 
 			if (any_data == true) {
