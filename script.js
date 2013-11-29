@@ -374,7 +374,6 @@ dtable.new_build_form = function($form, $row, action, value, row_data, colspan_c
    	{
 		jQuery($form).find("input.dtable_action").attr("name", action).val(JSON.stringify(value));
 		jQuery($form).find("input[name=table]").val(dtable.get_table_id($form));
-	//	jQuery($form).find("input[name=lines]").val(JSON.stringify(row_data[1]));
 						
 	} else
    	{
@@ -382,7 +381,6 @@ dtable.new_build_form = function($form, $row, action, value, row_data, colspan_c
 		jQuery($form).append('<input type="hidden" class="dtable_action" name="'+action+'" value="'+JSON.stringify(value)+'">');
 		//append table name
 		jQuery($form).append('<input type="hidden" name="table" value="'+ dtable.get_table_id($form) +'">');
-	//	jQuery($form).append('<input type="hidden" name="lines" value="'+JSON.stringify(row_data[1])+'">');
 	}
 
 

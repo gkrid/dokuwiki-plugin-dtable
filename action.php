@@ -84,222 +84,6 @@ class action_plugin_dtable extends DokuWiki_Action_Plugin {
 		} 
 		$event->data = implode("\n", $new_lines);
     }
-    /*function load_lexer_rules(&$event, $param)
-    {
-	//files contianging lexer commands
-	$files = array();
-
-	$type = 'syntax';
-	//get from plugincontroller.class.php 
-	
-	$doku_plugin_dir = opendir(DOKU_PLUGIN);
-	while (($plugin_dir = readdir($doku_plugin_dir)) !== false)
-	{
-	    $plugin = $plugin_dir;
-
-	    if($plugin_dir == '.' || $plugin_dir == '..' || ! is_dir(DOKU_PLUGIN.$plugin_dir) || plugin_isdisabled($plugin) )
-		continue;
-
-	    $dir = $plugin;
-
-            if (@file_exists(DOKU_PLUGIN."$dir/$type.php")){
-                $files [] = DOKU_PLUGIN."$plugin/$type.php";
-            } else {
-                if ($dp = @opendir(DOKU_PLUGIN."$dir/$type/")) {
-                    while (false !== ($component = readdir($dp))) {
-                        if (substr($component,0,1) == '.' || strtolower(substr($component, -4)) != ".php") continue;
-                        if (is_file(DOKU_PLUGIN."$dir/$type/$component")) {
-                            $files[] = DOKU_PLUGIN."$dir/$type/".$component;
-                        }
-                    }
-                    closedir($dp);
-                }
-            }
-        }
-
-	//Lexer rules
-	$lexer_rules = array('addEntryPattern' => array(), 'addPattern' => array(), 'addExitPattern' => array(), 'addSpecialPattern' => array() );
-
-	$modes = array('table', 'copy');
-	foreach($modes as $mode)
-	{
-	    //basic dokuwiki syntax:
-	    //strong
-	    $lexer_rules['addEntryPattern'][] = array('\*\*(?=.*\*\*)', $mode, 'copy');
-	    $lexer_rules['addExitPattern'][] = array('\*\*', 'copy');
-
-	    //emphasis
-	    $lexer_rules['addEntryPattern'][] = array('//(?=.//)', $mode, 'copy');//without hack for bugs #384 #763 #1468
-	    $lexer_rules['addExitPattern'][] = array('//', 'copy');
-
-	    //underline
-	    $lexer_rules['addEntryPattern'][] = array('__(?=.*__)', $mode, 'copy');
-	    $lexer_rules['addExitPattern'][] = array('__', 'copy');
-
-	    //monospace
-	    $lexer_rules['addEntryPattern'][] = array('\x27\x27(?=.*\x27\x27)', $mode, 'copy');
-	    $lexer_rules['addExitPattern'][] = array('\x27\x27', 'copy');
-
-	    //subscript
-	    $lexer_rules['addEntryPattern'][] = array('<sub>(?=.*</sub>)', $mode, 'copy');
-	    $lexer_rules['addExitPattern'][] = array('</sub>', 'copy');
-
-	    //superscript
-	    $lexer_rules['addEntryPattern'][] = array('<sup>(?=.*</sup>)', $mode, 'copy');
-	    $lexer_rules['addExitPattern'][] = array('</sup>', 'copy');
-
-	    //deleted
-	    $lexer_rules['addEntryPattern'][] = array('<del>(?=.*</del>)', $mode, 'copy');
-	    $lexer_rules['addExitPattern'][] = array('</del>', 'copy');
-
-	    $lexer_rules['addEntryPattern'][] = array('<nowiki>(?=.*</nowiki>)',$mode,'copy');
-	    $lexer_rules['addEntryPattern'][] = array('%%(?=.*%%)',$mode,'copy');
-	    $lexer_rules['addExitPattern'][] = array('</nowiki>','unformatted');
-	    $lexer_rules['addExitPattern'][] = array('%%','unformattedalt');
-	    $lexer_rules['mapHandler'][] = array('unformattedalt','unformatted');
-	    $lexer_rules['addEntryPattern'][] = array('\x28\x28(?=.*\x29\x29)',$mode,'copy');
-	    $lexer_rules['addExitPattern'][] = array('\x29\x29','footnote');
-	    $lexer_rules['addEntryPattern'][] = array('<php>(?=.*</php>)',$mode,'copy');
-	    $lexer_rules['addEntryPattern'][] = array('<PHP>(?=.*</PHP>)',$mode,'copy');
-	    $lexer_rules['addExitPattern'][] = array('</php>','php');
-	    $lexer_rules['addExitPattern'][] = array('</PHP>','phpblock');
-	    $lexer_rules['addEntryPattern'][] = array('<html>(?=.*</html>)',$mode,'copy');
-	    $lexer_rules['addEntryPattern'][] = array('<HTML>(?=.*</HTML>)',$mode,'copy');
-	    $lexer_rules['addExitPattern'][] = array('</html>','html');
-	    $lexer_rules['addExitPattern'][] = array('</HTML>','htmlblock');
-	    $lexer_rules['addEntryPattern'][] = array('\n  (?![\*\-])',$mode,'copy');
-	    $lexer_rules['addEntryPattern'][] = array('\n\t(?![\*\-])',$mode,'copy');
-	    $lexer_rules['addPattern'][] = array('\n  ','preformatted');
-	    $lexer_rules['addPattern'][] = array('\n\t','preformatted');
-	    $lexer_rules['addExitPattern'][] = array('\n','preformatted');
-	    $lexer_rules['addEntryPattern'][] = array('<code(?=.*</code>)',$mode,'copy');
-	    $lexer_rules['addExitPattern'][] = array('</code>','code');
-	    $lexer_rules['addEntryPattern'][] = array('<file(?=.*</file>)',$mode,'copy');
-	    $lexer_rules['addExitPattern'][] = array('</file>','file');
-	    $lexer_rules['addEntryPattern'][] = array('\n>{1,}',$mode,'copy');
-	    $lexer_rules['addPattern'][] = array('\n>{1,}','quote');
-	    $lexer_rules['addExitPattern'][] = array('\n','quote');
-
-
-	    $ws   =  '\s/\#~:+=&%@\-\x28\x29\]\[{}><"\'';   // whitespace
-	    $punc =  ';,\.?!';
-
-	    if($conf['typography'] == 2){
-		$this->Lexer->addSpecialPattern(
-			    "(?<=^|[$ws])'(?=[^$ws$punc])",$mode,'singlequoteopening'
-			);
-		$this->Lexer->addSpecialPattern(
-			    "(?<=^|[^$ws]|[$punc])'(?=$|[$ws$punc])",$mode,'singlequoteclosing'
-			);
-		$this->Lexer->addSpecialPattern(
-			    "(?<=^|[^$ws$punc])'(?=$|[^$ws$punc])",$mode,'apostrophe'
-			);
-	    }
-
-	    $lexer_rules['addSpecialPattern'][] = array(
-			"(?<=^|[$ws])\"(?=[^$ws$punc])",$mode,'doublequoteopening'
-		    );
-	    $lexer_rules['addSpecialPattern'][] = array(
-			"\"",$mode,'doublequoteclosing'
-		    );
-
-
-	    //media
-	    $lexer_rules['addSpecialPattern'][] = array("\{\{[^\}]+\}\}",$mode,'copy');
-	    //link
-	    $lexer_rules['addSpecialPattern'][] = array("\[\[(?:(?:[^[\]]*?\[.*?\])|.*?)\]\]", $mode, 'copy');
-	}
-
-	//Try to read plugins
-	foreach( $files as $file )
-	{
-	    $handle = @fopen($file, "r");
-	    if ($handle) {
-		while (($buffer = fgets($handle)) !== false) {
-		    if( strpos( $buffer, '$this->Lexer') !== false )
-		    {
-			//replace \\ by single \
-			$buffer = str_replace('\\\\', '\\', $buffer);
-			$php_strs = array();
-			$php_strs_rep = array();
-			$php_strs_i = 0;
-			$php_str = '';
-			$escape_buffer = '';
-			$in_php_str = 0;
-			for( $i = 0; $i < strlen($buffer); $i++ )
-			{
-			    if( $buffer[ $i ] == '\\' )
-			    {
-				if( $in_php_str == 1)
-				{
-				    $php_str .= $buffer[ $i ];
-				    $php_str .= $buffer[ $i+1 ];
-				} else
-				{
-				    $escape_buffer .= $buffer[ $i ];
-				    $escape_buffer .= $buffer[ $i+1 ];
-				}
-				$i++;
-				continue;
-			    }
-
-			    if( $buffer[ $i ] == "'" || $buffer[ $i ] == '"' )
-			    {
-				if($in_php_str == 1)
-			        {
-				    $in_php_str = 0;
-				    $php_strs[ $php_strs_i ] = $php_str;
-				    $php_strs_rep[ $php_strs_i ] = '%'.$php_strs_i;
-				    $php_str = '';
-				    $escape_buffer .= '%'.$php_strs_i;
-				    $php_strs_i++;
-				} else
-				{
-				    $in_php_str = 1;
-				    $i++;
-				    $php_str .= $buffer[ $i ];
-				}
-			    } else
-			    {
-				if( $in_php_str == 1)
-				{
-				    $php_str .= $buffer[ $i ];
-				} else
-				{
-				    $escape_buffer .= $buffer[ $i ];
-				}
-			    }
-			}
-
-			$instructions = explode(';', $escape_buffer);
-			foreach($instructions as $instr)
-			{
-			    if( preg_match('/\$this->Lexer->([^(]*)\((.*)\)/', $instr, $matches)  )
-			    {
-				$function = trim($matches[1]);
-				if( array_key_exists($function, $lexer_rules) )
-				{
-				    $args_dirt = explode(',', $matches[2]);
-				    $args = array();
-				    foreach($args_dirt as $arg)
-				    {
-					$arg = str_replace($php_strs_rep, $php_strs, $arg);
-					$arg = trim($arg);
-					$args[] = $arg;
-				    }
-				    $lexer_rules[ $function ][] = $args;
-				}
-			    }
-			}
-			dbglog($lexer_rules);
-		    }
-		}
-		fclose($handle);
-	    }
-	}
-
-	$event->data['current']['plugin_dtable_lexer_rules'] = $lexer_rules;
-}*/
     function add_php_data(&$event, $param) {
 	global $JSINFO, $ID;
 
@@ -365,8 +149,6 @@ class action_plugin_dtable extends DokuWiki_Action_Plugin {
 			for ($i = $scope[0]; $i <= $scope[1]; $i++)
 				$lines_to_remove[] = $i;
 
-			//$line_to_remove = $dtable_start_line + $table_line;
-
 			$removed_line = '';
 			foreach ($lines_to_remove as $line) {
 				$removed_line .= $page_lines[ $line ]." "; 
@@ -430,16 +212,11 @@ class action_plugin_dtable extends DokuWiki_Action_Plugin {
 			{
 				$action = 'edit';
 
-				//$table_line = (int) $_POST['edit'];
-				//$line_to_change = $dtable_start_line + $table_line;
-
 				$scope = $json->decode($_POST['edit']);
 
 				$lines_to_change = array();
 				for ($i = $scope[0]; $i <= $scope[1]; $i++)
 					$lines_to_charge[] = $i;
-
-				//$line_to_remove = $dtable_start_line + $table_line;
 
 				$old_line= '';
 				foreach ($lines_to_change as $line) {
@@ -449,8 +226,6 @@ class action_plugin_dtable extends DokuWiki_Action_Plugin {
 				$old_line = $page_lines[ $line_to_change ];
 
 				array_splice($page_lines, $scope[0], $scope[1] - $scope[0] + 1, $new_line);
-
-				//$page_lines[ $line_to_change ] = $new_line;
 
 				$new_cont = implode( "\n", $page_lines );
 

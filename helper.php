@@ -32,8 +32,6 @@ class helper_plugin_dtable extends dokuwiki_plugin
     }
 
     function line_nr($pos, $file_path, $start_line = 0) {
-		////dbglog("start line:".$start_line);
-		////dbglog("Start line: $start_line");*/
 		$line_nr = 0;
 		if (!is_array(self::$line_nr_c[$file_path])) {
 			self::$line_nr_c[$file_path] = array();
@@ -43,25 +41,18 @@ class helper_plugin_dtable extends dokuwiki_plugin
 			$start_pos = count(self::$line_nr_c[$file_path]) - 1;
 			$line_nr = self::$line_nr_c[$file_path][count(self::$line_nr_c[$file_path]) - 1];
 		}
-		/*dbglog("Cache:");
-		dbglog(self::$line_nr_c);*/
 
 		if ($start_line > 0) {
-			////dbglog("Arary reverse: ", array_reverse(self::$line_nr_c[$file_path]));
 			//find last pos on current line
 			if (($find = array_search($start_line, self::$line_nr_c[$file_path])) !== false) {
-				//$find = array_search($start_line -1, array_reverse(self::$line_nr_c[$file_path], true)); 
-				//dbglog("start line found");
 				//the new line charter from last line -> it's nessesery in order to corect work of my handler
 				$start_pos = $find;
 				$pos += $find;
 			} else {
-				////dbglog("start line NOT found, sart_pos $start_pos start line $line_nr < $start_line ".strlen(self::$file_cont));
 				if (self::$file_cont == NULL)
 					self::$file_cont = io_readFile($file_path);	
 
 				for($i = $start_pos; $i < strlen(self::$file_cont) && $line_nr < $start_line; $i++) {
-					////dbglog("COUNTER:".self::$file_cont[$i]." $i");
 					self::$line_nr_c[$file_path][$i] = $line_nr;
 					if(self::$file_cont[$i] == "\n")
 						$line_nr++;
@@ -72,8 +63,6 @@ class helper_plugin_dtable extends dokuwiki_plugin
 				$start_pos  = $i;
 			}
 			$line_nr = $start_line;
-			/*dbglog("$pos, $line_nr, $start_pos, $line_nr");
-			dbglog(self::$line_nr_c);*/
 
 		}
 		if ($start_pos >= $pos) {
@@ -84,56 +73,17 @@ class helper_plugin_dtable extends dokuwiki_plugin
 			if (self::$file_cont == NULL)
 				self::$file_cont = io_readFile($file_path);	
 
-			////dbglog("Rozpocznij pętlę pierwotną");
-			////dbglog(self::$line_nr_c);
-
 			for($i=$start_pos;$i <= $pos; $i++)
 			{
 				self::$line_nr_c[$file_path][$i] = $line_nr;
 				if(self::$file_cont[$i] == "\n")
 					$line_nr++;
 			}
-			////dbglog(self::$line_nr_c);
-			//dbglog("pos: $i");
-
 			return self::$line_nr_c[$file_path][$pos];
 		}
     }
-	function get_rows_instructions($row, $page_id, $start_line)
+	function rows($row, $page_id, $start_line)
 	{
-		/*$lexer_rules = p_get_metadata($page_id, 'plugin_dtable_lexer_rules');
-
-		$Parser = new Doku_Parser();
-
-		require_once 'dtable_handler.php';
-
-		$Parser->Handler = new Dtable_Doku_Handler();
-
-		$Parser->Lexer = new Doku_Lexer( $Parser->Handler, 'base', TRUE );
-
-
-
-		foreach( $lexer_rules['addEntryPattern'] as $pattern )
-		{
-			$Parser->Lexer->addEntryPattern($pattern[0], 'table', 'copy');
-		}
-		foreach( $lexer_rules['addPattern'] as $pattern )
-		{
-			$Parser->Lexer->addPattern($pattern[0], 'copy');
-		}
-		foreach( $lexer_rules['addExitPattern'] as $pattern )
-		{
-			$Parser->Lexer->addExitPattern($pattern[0], 'copy');
-		}
-		foreach( $lexer_rules['addSpecialPattern'] as $pattern )
-		{
-			$Parser->Lexer->addSpecialPattern($pattern[0], 'table', 'copy');
-		}
-
-		$Parser->addMode('table', new Doku_Parser_Mode_table());
-
-		return $Parser->parse($row);*/
-
 		$Parser = new Doku_Parser();
 
 		$Parser->Handler = new helper_plugin_dtable_handler($page_id, $start_line);
@@ -143,35 +93,10 @@ class helper_plugin_dtable extends dokuwiki_plugin
         foreach($modes as $mode) {
             $Parser->addMode($mode['mode'], $mode['obj']);
 		}
-		//$Parser->addMode('table', new Doku_Parser_Mode_table());
-
-		////dbglog("Porser begin");
-		dbglog(var_export($Parser->parse($row), true));
-		////dbglog("Porser end");
 
 		return $Parser->parse($row);
 		
 	}
-	function rows($row, $page_id, $start_line)
-	{
-		$instr = self::get_rows_instructions($row, $page_id, $start_line);
-		return $instr;
-
-		$table_cells = array();
-
-		//first table cell is 3 next 6 ...
-		$i = 3;
-		while( isset( $instr[$i] ) && ($instr[$i][0] == 'tablecell_open' || $instr[$i][0] == 'tableheader_open'))
-		{
-			$cell = $instr[$i+1][1][0];
-			$cell = str_replace('\\\\ ', "\n", $cell);
-			// tablecell/tableheader, colspan, value
-			$table_cells[] = array($instr[$i][0],$instr[$i][1][0], $cell);
-			$i += 3;
-		}
-
-		return $table_cells;
-		}
 	function get_spans($start_line, $page_lines, $page_id) {
 		$table = '';
 		for ($i = $start_line; trim($page_lines[$i]) != '</dtable>'; $i++) {
@@ -188,39 +113,6 @@ class helper_plugin_dtable extends dokuwiki_plugin
 		}
 		return $spans;
 	}
-	/*function get_rowspans($start_line, $page_lines, $page_id)
-	{
-		$len = 1;
-		while (strpos($page_lines[$start_line + $len], '|') === 0 || strpos($page_lines[$start_line + $len], '^') === 0)
-			$len++;
-		$table_lines = array_splice($page_lines, $start_line, $len);
-
-		$table = implode("\n", $table_lines);
-
-		$instr = self::get_rows_instructions($table, $page_id);
-
-		$table_rowspans = array();
-
-		$row = 0;
-		$cell = 0;
-		for($i = 2; $i < count($instr) - 2; $i++)
-		{
-			if ($instr[$i][0] == 'tablecell_open' || $instr[$i][0] == 'tableheader_open')
-			{
-				$rowspan = $instr[$i][1][2];
-				$table_rowspans[$row][$cell] = $rowspan;
-				$cell++;
-			} elseif($instr[$i][0] == 'tablerow_open') {
-				$table_rowspans[$row] = array();
-				$cell = 0;
-			} elseif($instr[$i][0] == 'tablerow_close') {
-				$row++;
-			}
-		}
-
-		return $table_rowspans;
-
-	}*/
     function format_row($array_line) {
 		foreach ($array_line as $cell)
 		{
