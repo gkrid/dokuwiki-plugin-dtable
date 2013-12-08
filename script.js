@@ -508,10 +508,19 @@ dtable.remove = function($this_row) {
 	      if(res.type == 'success')
 	      {
 			var rows_data = $form.data("table");
+			var length = rows_data[id][1][1] - rows_data[id][1][0] + 1;
 			rows_data.splice(id, 1);
+
 			$form.data("table", rows_data);
-			
+
 			$this_row.remove();
+
+
+			for (var i = id; i < rows_data.length; i++) {
+				  rows_data[i][1][0] -= length;
+				  rows_data[i][1][1] -= length;
+			}
+		    $form.data('table', rows_data);
 
 			//change rows in case of rowspan
 			dtable.change_rows($table, res.spans);
@@ -823,12 +832,15 @@ jQuery(".dtable").submit(
 							  var index = dtable.get_row_id($table, $new_elm);
 							  
 							  var raw_rows = $form.data('table');
-							  //console.log(raw_rows);
 
 							  if (res.action == 'edit') {
 								  raw_rows[index] = res.raw_row;
 							  } else {
 								  raw_rows.splice(index, 0, res.raw_row);
+							  }
+							  for (var i = index+1; i < raw_rows.length; i++) {
+								  raw_rows[i][1][0]++;
+								  raw_rows[i][1][1]++;
 							  }
 							  $form.data('table', raw_rows);
 						  }

@@ -204,6 +204,7 @@ class action_plugin_dtable extends DokuWiki_Action_Plugin {
 				$line_to_add = $dtable_start_line + $table_line;
 
 				array_splice($page_lines, $line_to_add, 0, $new_line );
+				$line_nr = $line_to_add;
 
 				$info = $this->getLang('summary_add').' '.$new_line;
 
@@ -225,6 +226,7 @@ class action_plugin_dtable extends DokuWiki_Action_Plugin {
 				$old_line = $page_lines[ $line_to_change ];
 
 				array_splice($page_lines, $scope[0], $scope[1] - $scope[0] + 1, $new_line);
+				$line_nr = $scope[0];
 
 				$new_cont = implode( "\n", $page_lines );
 
@@ -234,7 +236,7 @@ class action_plugin_dtable extends DokuWiki_Action_Plugin {
 			$new_cont = implode( "\n", $page_lines );
 			saveWikiText($dtable_page_id, $new_cont, $info);
 
-			echo $json->encode( array('type' => 'success', 'action' => $action, 'new_row' => $dtable->parse_line($new_line, $dtable_page_id), 'raw_row' => array($new_table_line, array(1, 1)), 'spans' =>  $dtable->get_spans($dtable_start_line, $page_lines, $dtable_page_id) ) );
+			echo $json->encode( array('type' => 'success', 'action' => $action, 'new_row' => $dtable->parse_line($new_line, $dtable_page_id), 'raw_row' => array($new_table_line, array($line_nr, $line_nr)), 'spans' =>  $dtable->get_spans($dtable_start_line, $page_lines, $dtable_page_id) ) );
 
 		}
 	break;
