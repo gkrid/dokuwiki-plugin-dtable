@@ -267,6 +267,7 @@ dtable.unlock_dtable = function()
     jQuery(document).dblclick(function(e){
 	    //sent form only once
 	    if(dtable.form_processing == false) {
+			dtable.form_processing = true;
 			//$context_menu.hide();
 			if(jQuery(".dtable .form_row").find(":visible").length > 0)
 				jQuery(".dtable").submit();
@@ -483,7 +484,7 @@ dtable.new_build_form = function($form, $row, action, value, row_data, colspan_c
 	$form.find("textarea.dtable_field").first().attr("id", dtable.textarea_id);
 
     var $toolbar = jQuery("#"+dtable.toolbar_id);
-	initToolbar(dtable.toolbar_id, dtable.textarea_id, toolbar);//??? - ale działa
+	initToolbar(dtable.toolbar_id, dtable.textarea_id, toolbar);
 };
 
 dtable.get_lines = function ($form, id) {
@@ -787,7 +788,7 @@ jQuery(".dtable").submit(
 	{
 	    var $form = jQuery(this);
 	    if($form.attr("id") == dtable.id) {
-			dtable.form_processing = true;
+			/*dtable.form_processing = true;*///Now form_processing is in dblclick func
 			var data = {};
 			var action = jQuery(this).find("input.dtable_field.dtable_action").attr("name");
 			var any_data = false;
@@ -832,13 +833,20 @@ jQuery(".dtable").submit(
 							  var raw_rows = $form.data('table');
 
 							  if (res.action == 'edit') {
+								  old_row = raw_rows[index];
 								  raw_rows[index] = res.raw_row;
+								  diff = old_row[1][1] - old_row[1][0];
+								  for (var i = index+1; i < raw_rows.length; i++) {
+									  raw_rows[i][1][0] -= diff;
+									  raw_rows[i][1][1] -= diff;
+								  }
 							  } else {
 								  raw_rows.splice(index, 0, res.raw_row);
-							  }
-							  for (var i = index+1; i < raw_rows.length; i++) {
-								  raw_rows[i][1][0]++;
-								  raw_rows[i][1][1]++;
+								  diff = res.raw_row[1][1] - res.raw_row[1][0] + 1;
+								  for (var i = index+1; i < raw_rows.length; i++) {
+									  raw_rows[i][1][0] += diff;
+									  raw_rows[i][1][1] += diff;
+								  }
 							  }
 							  $form.data('table', raw_rows);
 						  }

@@ -99,7 +99,7 @@ class helper_plugin_dtable extends dokuwiki_plugin
 	}
 	function get_spans($start_line, $page_lines, $page_id) {
 		$table = '';
-		for ($i = $start_line; trim($page_lines[$i]) != '</dtable>'; $i++) {
+		for ($i = $start_line; trim($page_lines[$i]) != '</dtable>' && $i < count($page_lines); $i++) {
 			$table .= $page_lines[$i]."\n";
 		}
 
