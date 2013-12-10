@@ -266,11 +266,10 @@ dtable.unlock_dtable = function()
 
     jQuery(document).dblclick(function(e){
 	    //sent form only once
-	    if(dtable.form_processing == false)
-	    {
-		//$context_menu.hide();
-		if(jQuery(".dtable .form_row").find(":visible").length > 0)
-		    jQuery(".dtable").submit();
+	    if(dtable.form_processing == false) {
+			//$context_menu.hide();
+			if(jQuery(".dtable .form_row").find(":visible").length > 0)
+				jQuery(".dtable").submit();
 	    }
     });
 };
@@ -408,6 +407,7 @@ dtable.new_build_form = function($form, $row, action, value, row_data, colspan_c
 
 
 	var cells = row_data[0];
+
 	for(var i = 0; i < cells.length; i++)
 	{
 		switch (cells[i][2]) {
@@ -798,7 +798,7 @@ jQuery(".dtable").submit(
 					if (jQuery(this).attr("class") != null && jQuery(this).attr("name").indexOf("col") == 0) {
 						if (jQuery(this).val() != "" && jQuery.trim(jQuery(this).val()) != ':::')
 							any_data = true;
-						data[jQuery(this).attr("name")] = JSON.stringify([jQuery(this).attr("class"), jQuery(this).val()]);
+						data[jQuery(this).attr("name")] = JSON.stringify([jQuery(this).hasClass("tableheader_open") ? "tableheader_open" : "tablecell_open", jQuery(this).val()]);
 					} else
 						data[jQuery(this).attr("name")] = jQuery(this).val();
 				});
@@ -934,6 +934,6 @@ jQuery(document).ready(function()
 	new Image('lib/plugins/dtable/images/unmerge.png');
     //check permission and if any dtable exists
     if(JSINFO['write'] === true && jQuery(".dtable").length > 0)
-	dtable.init()
+		dtable.init();
 });
 jQuery(window).unload( function () { dtable.unlock(); } );
