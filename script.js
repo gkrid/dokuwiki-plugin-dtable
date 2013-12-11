@@ -484,7 +484,9 @@ dtable.new_build_form = function($form, $row, action, value, row_data, colspan_c
 	$form.find("textarea.dtable_field").first().attr("id", dtable.textarea_id);
 
     var $toolbar = jQuery("#"+dtable.toolbar_id);
-	initToolbar(dtable.toolbar_id, dtable.textarea_id, toolbar);
+	if ($toolbar.is(':empty')) {
+		initToolbar(dtable.toolbar_id, dtable.textarea_id, toolbar);
+	}
 };
 
 dtable.get_lines = function ($form, id) {
