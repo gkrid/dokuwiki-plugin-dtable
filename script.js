@@ -634,7 +634,7 @@ dtable.contex_handler = function(e) {
 		var rows_data = $form.data("table");
 		var rows = rows_data[row_id];
 
-		dtable.new_build_form($form, $this_row, "add", row_id, rows, 
+		dtable.new_build_form($form, $this_row, "add", rows[1][1], rows, 
 				insert_colspan_callback,
 				function(cclass, rowspan, colspan, value)
 			    {
@@ -661,13 +661,20 @@ dtable.contex_handler = function(e) {
 		var rows_data = $form.data("table");
 
 		var $before_elm = $this_row.prev();
-		var add = -1;
-		if($before_elm.length != 0)
-		    add = dtable.get_row_id($table, $before_elm);
+
+
+		if($before_elm.length != 0) {
+			var bef_row_id = dtable.get_row_id($table, $before_elm);
+		    var add = rows_data[bef_row_id][1][1];
+			var first_elm = false;
+		} else {
+			var add = rows_data[0][1][1];
+			var first_elm = true;
+		}
 
 		var rows = rows_data[dtable.get_row_id($table, $this_row)];
 
-		if (add === -1) {
+		if (first_elm == true) {
 			var mod_row_call = 
 				function(cclass, rowspan, colspan, value)
 			    {

@@ -200,8 +200,9 @@ class action_plugin_dtable extends DokuWiki_Action_Plugin {
 			{
 				$action = 'add';
 
-				$table_line = (int) $_POST['add'] + 1;
-				$line_to_add = $dtable_start_line + $table_line;
+				/*$table_line = (int) $_POST['add'] + 1;
+				$line_to_add = $dtable_start_line + $table_line;*/
+				$line_to_add = (int) $_POST['add'] + 1;
 
 				array_splice($page_lines, $line_to_add, 0, $new_line );
 				$line_nr = $line_to_add;

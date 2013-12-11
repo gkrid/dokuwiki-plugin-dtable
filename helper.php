@@ -189,17 +189,14 @@ class helper_plugin_dtable_handler {
 
             case DOKU_LEXER_UNMATCHED:
 				if (is_array($this->calls)) {
-					if ( trim($match) != '' ) {
-
-						$this->calls[$this->row][0][$this->cell][3] .= $match;
-					} 
+					$this->calls[$this->row][0][$this->cell][3] .= $match;
 				}
             break;
 
             case DOKU_LEXER_MATCHED:
                 if ( preg_match('/:::/',$match) ) {
 					$this->calls[$this->row][0][$this->cell][3] .= $match;
-				} else if ( $match == ' ' ){
+				} else if ( trim($match) == '' ){
 					$this->calls[$this->row][0][$this->cell][3] .= $match;
 				} else {
 					$row = $this->row;

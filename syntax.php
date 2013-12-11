@@ -89,6 +89,7 @@ class syntax_plugin_dtable extends DokuWiki_Syntax_Plugin {
 				$raw_lines .= $file_cont[$i]."\n";
 				$i++;
 			}
+
 			$lines = $dtable->rows($raw_lines, $id, $start_line);
 
 			$json = new JSON();
