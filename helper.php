@@ -238,6 +238,11 @@ class helper_plugin_dtable_handler {
         }
         return true;
     }
+	/** Change // into \n during editing in textbox, can be turn off if not needed. */
+    public function linebreak($match, $state, $pos) {
+		$this->calls[$this->row][0][$this->cell][3] .= "\n";
+        return true;
+    }
     /**
 	* Catchall handler for the remaining syntax
 	*
