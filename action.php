@@ -217,14 +217,14 @@ class action_plugin_dtable extends DokuWiki_Action_Plugin {
 
 				$lines_to_change = array();
 				for ($i = $scope[0]; $i <= $scope[1]; $i++)
-					$lines_to_charge[] = $i;
+					$lines_to_change[] = $i;
 
 				$old_line= '';
 				foreach ($lines_to_change as $line) {
 					$old_line .= $page_lines[ $line ]." "; 
 				}
 
-				$old_line = $page_lines[ $line_to_change ];
+				//$old_line = $page_lines[ $line_to_change ];
 
 				array_splice($page_lines, $scope[0], $scope[1] - $scope[0] + 1, $new_line);
 				$line_nr = $scope[0];
