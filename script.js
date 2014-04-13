@@ -303,6 +303,8 @@ dtable.row_mousedown = function(e) {
 				//'insert_col_left', 'insert_col_right', 'mark_row_as_cell', 'mark_col_as_cell', 'mark_cell_as_cell'];
 		break;
 	}
+	//remove disabled actions
+	context_menus = jQuery(context_menus).not(JSINFO['disabled']).get();
 
 	var colspan = $this_cell.attr("colspan");
 	var rowspan = $this_cell.attr("rowspan");

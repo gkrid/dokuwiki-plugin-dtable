@@ -91,6 +91,8 @@ class action_plugin_dtable extends DokuWiki_Action_Plugin {
 	else
 	    $JSINFO['write'] = false;
 
+	$JSINFO['disabled'] = explode(',', $this->getConf('disabled'));
+
 
 	$JSINFO['lang']['insert_before'] = $this->getLang('insert_before');
 	$JSINFO['lang']['insert_after'] = $this->getLang('insert_after');
