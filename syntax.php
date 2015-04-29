@@ -50,6 +50,7 @@ class syntax_plugin_dtable extends DokuWiki_Syntax_Plugin {
     }
 
     function render($mode, &$renderer, $data) {
+	global $ID;
 	if($mode == 'xhtml')
 	{
 	   list($state,$match) = $data;
