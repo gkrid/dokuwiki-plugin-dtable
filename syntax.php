@@ -31,7 +31,7 @@ class syntax_plugin_dtable extends DokuWiki_Syntax_Plugin {
     function postConnect() { $this->Lexer->addExitPattern('</dtable>','plugin_dtable'); }
 
 
-    function handle($match, $state, $pos, &$handler) {
+    function handle($match, $state, $pos, Doku_Handler $handler) {
 		global $INFO;
         switch ($state) {
           case DOKU_LEXER_ENTER :
@@ -49,7 +49,7 @@ class syntax_plugin_dtable extends DokuWiki_Syntax_Plugin {
         return array();
     }
 
-    function render($mode, &$renderer, $data) {
+    function render($mode, Doku_Renderer $renderer, $data) {
 	global $ID;
 	if($mode == 'xhtml')
 	{
