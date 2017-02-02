@@ -19,11 +19,23 @@ require_once DOKU_PLUGIN.'syntax.php';
 class action_plugin_dtable extends DokuWiki_Action_Plugin {
 
     function register(Doku_Event_Handler $controller) {
-	    $controller->register_hook('DOKUWIKI_STARTED', 'AFTER',  $this, 'add_php_data');
-	    $controller->register_hook('AJAX_CALL_UNKNOWN', 'BEFORE',  $this, 'handle_ajax');
-	    $controller->register_hook('PARSER_WIKITEXT_PREPROCESS', 'AFTER',  $this, 'parser_preprocess_handler');
+	$controller->register_hook('DOKUWIKI_STARTED', 'AFTER',  $this, 'add_php_data');
+	$controller->register_hook('AJAX_CALL_UNKNOWN', 'BEFORE',  $this, 'handle_ajax');
+	$controller->register_hook('PARSER_WIKITEXT_PREPROCESS', 'AFTER',  $this, 'parser_preprocess_handler');
+    	$controller->register_hook('TOOLBAR_DEFINE', 'AFTER', $this, 'insert_button', array ());
 
-    }
+  }
+
+  public function insert_button (Doku_Event $event, $param) {
+      $event->data[] = array (
+          'type' => 'format',
+          'title' => $this->getLang('toolbar_insert_button'),
+          'icon'  => '../../plugins/dtable/images/add_table.png',
+          'open' => '<dtable>',
+          'close' => '</dtable>',
+          'sample' => "\n^   ^   ^\n|   |   |\n|   |   |\n|   |   |\n"
+      );
+  }
     function parser_preprocess_handler(&$event, $parm)
     {
 		global $ID, $INFO;
