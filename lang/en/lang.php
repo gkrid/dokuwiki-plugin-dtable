@@ -3,6 +3,7 @@
 $lang['insert_after'] = 'Insert after';
 $lang['insert_before'] = 'Insert before';
 $lang['edit'] = 'Edit';
+$lang['toolbar_insert_button'] = 'Insert Dtable';
 $lang['remove'] = 'Remove';
 $lang['insert_col_left'] = 'Insert column left';
 $lang['insert_col_right'] = 'Insert column right';
