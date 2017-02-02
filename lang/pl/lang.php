@@ -3,8 +3,8 @@
 $lang['insert_after'] = 'Wstaw za';
 $lang['insert_before'] = 'Wstaw przed';
 $lang['edit'] = 'Edytuj';
+$lang['toolbar_insert_button'] = 'Wstaw Dtablę';
 $lang['remove'] = 'Usuń';
-
 $lang['insert_col_left'] = 'Wstaw kolumnę po lewej';
 $lang['insert_col_right'] = 'Wstaw kolumnę po prawej';
 $lang['mark_row_as_header'] = 'Przekształć ten wiersz nagłówek';
