@@ -1,11 +1,4 @@
 <?php
-/**
- * Plugin Now: Inserts a timestamp.
- * 
- * @license    GPL 3 (http://www.gnu.org/licenses/gpl.html)
- * @author     Szymon Olewniczak <szymon.olewniczak@rid.pl>
- */
-
 // must be run within DokuWiki
 if(!defined('DOKU_INC')) die();
 
