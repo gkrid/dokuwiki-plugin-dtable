@@ -1,6 +1,6 @@
 base dtable
 author Szymon Olewniczak
-email (my first name) [at] imz [dot] re
+email solewniczak@rid.pl
 date 2017-02-02
 name dtable
 desc This plugin canges dokuwiki tables to dynamic tables that can be managed using simle GUI.
