@@ -1,3 +1,7 @@
 #dtable_context_menu {
     display: none;
 }
+
+.dtable.dynamic_form {
+    display: block;
+}
