@@ -955,4 +955,4 @@ jQuery(document).ready(function()
     if(JSINFO['write'] === true && jQuery(".dtable").length > 0)
 		dtable.init();
 });
-jQuery(window).unload( function () { dtable.unlock(); } );
+jQuery(window).on('unload', function () { dtable.unlock(); } );
