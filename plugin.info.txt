@@ -1,7 +1,7 @@
 base dtable
 author Szymon Olewniczak
 email solewniczak@rid.pl
-date 2017-09-29
+date 2021-03-28
 name dtable
 desc Edit wiki tables directly on the page, using contextmenu.
 url http://www.dokuwiki.org/plugin:dtable
