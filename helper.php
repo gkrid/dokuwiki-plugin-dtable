@@ -25,7 +25,7 @@ class helper_plugin_dtable extends dokuwiki_plugin
 		}
     }
 
-    function line_nr($pos, $file_path, $start_line = 0) {
+    static function line_nr($pos, $file_path, $start_line = 0) {
 		$line_nr = 0;
 		if (!is_array(self::$line_nr_c[$file_path])) {
 			self::$line_nr_c[$file_path] = array();
