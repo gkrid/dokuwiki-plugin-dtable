@@ -44,7 +44,7 @@ class helper_plugin_dtable extends dokuwiki_plugin
 				$pos += $find;
 			} else {
 				if (self::$file_cont == NULL)
-					self::$file_cont = io_readFile($file_path);	
+					self::$file_cont = io_readFile($file_path);
 
 				for($i = $start_pos; $i < strlen(self::$file_cont) && $line_nr < $start_line; $i++) {
 					self::$line_nr_c[$file_path][$i] = $line_nr;
@@ -65,7 +65,7 @@ class helper_plugin_dtable extends dokuwiki_plugin
 			return self::$line_nr_c[$file_path][$pos];
 		} else {
 			if (self::$file_cont == NULL)
-				self::$file_cont = io_readFile($file_path);	
+				self::$file_cont = io_readFile($file_path);
 
 			for($i=$start_pos;$i <= $pos; $i++)
 			{
@@ -89,7 +89,7 @@ class helper_plugin_dtable extends dokuwiki_plugin
 		}
 
 		return $Parser->parse($row);
-		
+
 	}
 	function get_spans($start_line, $page_lines, $page_id) {
 		$table = '';
@@ -152,7 +152,7 @@ class helper_plugin_dtable_handler {
 	public $type;
 	public $file_path;
 	public $start_line;
-	
+
 	public function __construct($page_id, $start_line) {
 		$this->file_path = wikiFN($page_id);
 		$this->start_line = $start_line;
@@ -245,6 +245,10 @@ class helper_plugin_dtable_handler {
 	* @return bool If parsing should be continue
 	*/
     public function __call($name, $params) {
+        if($this->calls === null) $this->calls = [];
+        if(!isset($this->calls[$this->row][0][$this->cell][3])) {
+            $this->calls[$this->row][0][$this->cell][3] = '';
+        }
 		$this->calls[$this->row][0][$this->cell][3] .= $params[0];
 		return true;
     }
