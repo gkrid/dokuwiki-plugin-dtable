@@ -18,7 +18,7 @@ class syntax_plugin_dtable extends DokuWiki_Syntax_Plugin {
 
     function getType() { return 'container'; }
     function getSort() { return 400; }
-    function getAllowedTypes() {return array('container','formatting','substition');} 
+    function getAllowedTypes() {return array('container','formatting','substition');}
 
     function connectTo($mode) { $this->Lexer->addEntryPattern('<dtab[0-9][0-9]>(?=.*</dtable>)',$mode,'plugin_dtable'); }
     function postConnect() { $this->Lexer->addExitPattern('</dtable>','plugin_dtable'); }
@@ -26,16 +26,17 @@ class syntax_plugin_dtable extends DokuWiki_Syntax_Plugin {
 
     function handle($match, $state, $pos, Doku_Handler $handler) {
 		global $INFO;
+        global $ID;
         switch ($state) {
           case DOKU_LEXER_ENTER :
 	      try {
 		  		$table_nr = (int) substr($match, 5, 2);
-                return array($state, array($pos, $table_nr, p_get_metadata($INFO['id'], 'dtable_pages')));
+                return array($state, array($pos, $table_nr, p_get_metadata($INFO['id'] ?? $ID, 'dtable_pages')));
 	      } catch(Exception $e)
 	      {
 		  return array($state, false);
 	      }
- 
+
           case DOKU_LEXER_UNMATCHED :  return array($state, $match);
           case DOKU_LEXER_EXIT :       return array($state, '');
         }
@@ -48,11 +49,11 @@ class syntax_plugin_dtable extends DokuWiki_Syntax_Plugin {
 	{
 	   list($state,$match) = $data;
 	   switch ($state) {
-	     case DOKU_LEXER_ENTER :     
+	     case DOKU_LEXER_ENTER :
 
 		if($match != false)
 		{
-		    if (auth_quickaclcheck($ID) >= AUTH_EDIT) 
+		    if (auth_quickaclcheck($ID) >= AUTH_EDIT)
 		    {
 			$dtable =& plugin_load('helper', 'dtable');
 
@@ -65,7 +66,7 @@ class syntax_plugin_dtable extends DokuWiki_Syntax_Plugin {
 
 			$start_line = $dtable->line_nr($pos, $filepath) ;
 
-			//search for first row 
+			//search for first row
 			$file_cont = explode("\n", io_readWikiPage($filepath, $id));
 
 			$start_line++;
@@ -99,10 +100,10 @@ class syntax_plugin_dtable extends DokuWiki_Syntax_Plugin {
 	    break;
 
 	    case DOKU_LEXER_UNMATCHED :  $renderer->doc .= $renderer->_xmlEntities($match); break;
-	    case DOKU_LEXER_EXIT :     
-		if (auth_quickaclcheck($ID) >= AUTH_EDIT) 
-		    $renderer->doc .= "</form>"; 
-		
+	    case DOKU_LEXER_EXIT :
+		if (auth_quickaclcheck($ID) >= AUTH_EDIT)
+		    $renderer->doc .= "</form>";
+
 	    break;
 	   }
 	   return true;
