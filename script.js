@@ -28,7 +28,7 @@ dtable.page_locked = 0;
 
 //state of lock
 //0 -> we don't know anything
-//1 -> someone lock the page and we waiting until we could refresh it 
+//1 -> someone lock the page and we waiting until we could refresh it
 //2 -> we can edit page for some time but we left browser alone and our lock expires and someone else came end start to edit page, so we need to lock our page and optionally send the form.
 dtable.lock_state = 0;
 
@@ -55,7 +55,7 @@ dtable.error = function(msg)
 };
 dtable.show_form = function($table)
 {
-    var $form = $table.find(".form_row"); 
+    var $form = $table.find(".form_row");
     var $toolbar = jQuery("#"+dtable.toolbar_id);
 
     //display fix jquery 1.6 bug
@@ -66,7 +66,7 @@ dtable.show_form = function($table)
 	$form.find("textarea.dtable_field").each(function() {
 
 		//this is merged cell
-		var button = jQuery(this).closest('td').find('button'); 
+		var button = jQuery(this).closest('td').find('button');
 		if (button.length > 0)
 		{
 			var button_width = 31;
@@ -86,18 +86,18 @@ dtable.show_form = function($table)
 		jQuery(this).css('top', textarea_offset.top - this_texta_offset.top);
 	});
 
-	
+
 
     var offset = $form.offset();
     $toolbar.css({
-	"left": offset.left, 
+	"left": offset.left,
 	"top": offset.top-$toolbar.height()
     });
     $toolbar.show();
 };
 dtable.hide_form = function($table)
 {
-    var $form = $table.find(".form_row"); 
+    var $form = $table.find(".form_row");
 	//remove form
 	$form.remove();
 	//remove textareas in rowspans
@@ -125,7 +125,7 @@ dtable.get_call = function($form)
 //Lock actuall page
 dtable.lock = function()
 {
-  jQuery.post(DOKU_BASE + 'lib/exe/ajax.php', 
+  jQuery.post(DOKU_BASE + 'lib/exe/ajax.php',
   {
       'call': 'dtable_page_lock',
       'page': JSINFO['id'],
@@ -135,7 +135,7 @@ dtable.unlock = function()
 {
   if(dtable.page_locked == 1)
   {
-      jQuery.post(DOKU_BASE + 'lib/exe/ajax.php', 
+      jQuery.post(DOKU_BASE + 'lib/exe/ajax.php',
       {
 	  'call': 'dtable_page_unlock',
 	  'page': JSINFO['id'],
@@ -165,7 +165,7 @@ dtable.panlock_switch = function(state)
 
 dtable.lock_seeker = function(nolock, lock)
 {
-  jQuery.post(DOKU_BASE + 'lib/exe/ajax.php', 
+  jQuery.post(DOKU_BASE + 'lib/exe/ajax.php',
   {
       'call': 'dtable_is_page_locked',
       'page': JSINFO['id'],
@@ -235,7 +235,7 @@ dtable.unlock_dtable = function()
    jQuery(document).bind('mousemove', function(e){
        dtable.pageX = e.pageX;
        dtable.pageY = e.pageY;
-   }); 
+   });
 
 
 
@@ -265,12 +265,15 @@ dtable.unlock_dtable = function()
     });
 
     jQuery(document).dblclick(function(e){
-	    //sent form only once
+        //sent form only once
 	    if(dtable.form_processing == false) {
 			dtable.form_processing = true;
 			//$context_menu.hide();
-			if(jQuery(".dtable .form_row").find(":visible").length > 0)
-				jQuery(".dtable").submit();
+			if(jQuery(".dtable .form_row").find(":visible").length > 0) {
+                jQuery(".dtable").submit();
+            } else {
+                dtable.form_processing = false;
+            }
 	    }
     });
 };
@@ -280,7 +283,7 @@ dtable.lock_dtable = function()
 
     jQuery(document).unbind('mousemove');
     $row.find("td, th").unbind('contextmenu');
-    
+
     jQuery("#dtable_context_menu").hide();
 };
 
@@ -289,7 +292,7 @@ dtable.row_mousedown = function(e) {
     var $this_row = $this_cell.closest("tr");
 
     var $context_menu = jQuery("#dtable_context_menu");
-	
+
     $context_menu.html('');
 	switch(this.nodeName.toLowerCase())
 	{
@@ -319,7 +322,7 @@ dtable.row_mousedown = function(e) {
 	$context_menu.find("li.insert_col_left").addClass("separator");
 	$context_menu.find("li.mark_row_as_header").addClass("separator");
 
-	
+
     var offsetX = e.pageX + 1;
     var offsetY = e.pageY + 1;
 
@@ -357,7 +360,7 @@ dtable.change_rows = function($table, spans)
 			}
 		});
 	});
-	
+
 };
 
 dtable.get_table_id = function($form)
@@ -374,7 +377,7 @@ dtable.new_build_form = function($form, $row, action, value, row_data, colspan_c
    	{
 		jQuery($form).find("input.dtable_field.dtable_action").attr("name", action).val(JSON.stringify(value));
 		jQuery($form).find("input.dtable_field[name=table]").val(dtable.get_table_id($form));
-						
+
 	} else
    	{
 		//append dtable_action
@@ -421,9 +424,9 @@ dtable.new_build_form = function($form, $row, action, value, row_data, colspan_c
 				var tclass = 'tablecell_open';
 				break;
 		}
-		var colspan = cells[i][0]; 
-		var rowspan = cells[i][1]; 
-		var content = cells[i][3]; 
+		var colspan = cells[i][0];
+		var rowspan = cells[i][1];
+		var content = cells[i][3];
 
 		var $father_cell = $row.find("td, th").eq(td_index);
 		//var rowspan = $father_cell.attr('rowspan');
@@ -501,7 +504,7 @@ dtable.remove = function($this_row) {
 	$table = $form.find("table");
 
 	var id = dtable.get_row_id($table, $this_row);
-	  jQuery.post(DOKU_BASE + 'lib/exe/ajax.php', 
+	  jQuery.post(DOKU_BASE + 'lib/exe/ajax.php',
 	  {
 	      'call': dtable.get_call($form),
 	      'table': dtable.get_table_id($form),
@@ -541,7 +544,7 @@ dtable.remove = function($this_row) {
 dtable.contex_handler = function(e) {
     e.preventDefault();
 
-	var insert_colspan_callback = 
+	var insert_colspan_callback =
 				function($form_row, colspan,  width, height, tclass, col) {
 					width /= colspan;
 					for (var j = 0; j < colspan; j++)
@@ -550,7 +553,7 @@ dtable.contex_handler = function(e) {
 						col++;
 					}
 					return col;
-				}; 
+				};
 
     $this_row = dtable.row;
     dtable.id = $this_row.closest(".dtable").attr("id");
@@ -627,7 +630,7 @@ dtable.contex_handler = function(e) {
 		$this_row.after($table.find(".form_row"));
 
 		$this_row.hide();
-		dtable.show_form($table);  
+		dtable.show_form($table);
 
 	break;
 	case '#insert_after':
@@ -636,7 +639,7 @@ dtable.contex_handler = function(e) {
 		var rows_data = $form.data("table");
 		var rows = rows_data[row_id];
 
-		dtable.new_build_form($form, $this_row, "add", rows[1][1], rows, 
+		dtable.new_build_form($form, $this_row, "add", rows[1][1], rows,
 				insert_colspan_callback,
 				function(cclass, rowspan, colspan, value)
 			    {
@@ -654,7 +657,7 @@ dtable.contex_handler = function(e) {
 		var $form_row = $table.find(".form_row");
 
 		$this_row.after($form_row);
-		dtable.show_form($table);  
+		dtable.show_form($table);
 	break;
 	case '#insert_before':
 
@@ -677,7 +680,7 @@ dtable.contex_handler = function(e) {
 		var rows = rows_data[dtable.get_row_id($table, $this_row)];
 
 		if (first_elm == true) {
-			var mod_row_call = 
+			var mod_row_call =
 				function(cclass, rowspan, colspan, value)
 			    {
 					if (jQuery.trim(value) !== ':::')
@@ -691,7 +694,7 @@ dtable.contex_handler = function(e) {
 					return [cclass, rowspan, colspan, value];
 			    };
 		} else {
-			var mod_row_call = 
+			var mod_row_call =
 				function(cclass, rowspan, colspan, value)
 			    {
 					if (jQuery.trim(value) !== ':::')
@@ -706,11 +709,11 @@ dtable.contex_handler = function(e) {
 			    };
 		}
 
-		dtable.new_build_form($form, $this_row, "add", add, rows, 
+		dtable.new_build_form($form, $this_row, "add", add, rows,
 				insert_colspan_callback, mod_row_call);
 
 		$this_row.before($table.find(".form_row"));
-		dtable.show_form($table);  
+		dtable.show_form($table);
 	break;
     }
     jQuery(this).closest("#dtable_context_menu").hide();
@@ -731,7 +734,7 @@ dtable.intervals.push(setInterval(function()
     dtable.lock_expires -= 1;
     if(dtable.lock_expires <= -1)
 	return;
-    
+
     if(dtable.lock_expires === 0)
     {
 	//we had own lock
@@ -749,7 +752,7 @@ dtable.intervals.push(setInterval(function()
 	    //after submitting form
 	    dtable.lock_dtable();
 	    dtable.panlock_switch('panunlock');
-	} else 
+	} else
 	{
 	    //unblock us if someones lock expires
 	    dtable.lock_seeker();
@@ -816,14 +819,14 @@ jQuery(".dtable").submit(
 				});
 
 			if (any_data == true) {
-				jQuery.post(DOKU_BASE + 'lib/exe/ajax.php', 
+				jQuery.post(DOKU_BASE + 'lib/exe/ajax.php',
 						data,
 				function(data)
 				{
 					  var res = jQuery.parseJSON(data);
 					  if(res.type == 'success')
 					  {
-						  
+
 						  if( res.new_row !== undefined )
 						  {
 							  //remove old element
@@ -840,7 +843,7 @@ jQuery(".dtable").submit(
 								  $new_elm.find("td, th").bind("contextmenu", dtable.row_mousedown);
 
 							  var index = dtable.get_row_id($table, $new_elm);
-							  
+
 							  var raw_rows = $form.data('table');
 
 							  if (res.action == 'edit') {
@@ -883,6 +886,7 @@ jQuery(".dtable").submit(
 				dtable.form_processing = false;
 			}
 	    }
+       dtable.form_processing = false;
 	   return false;
 	});
 jQuery(".dtable").delegate('textarea.dtable_field', 'focus', function(e) {
@@ -895,7 +899,7 @@ jQuery(".dtable").delegate('textarea.dtable_field', 'focus', function(e) {
 
 	$marked_parent = $marked_textarea.parent();
 	$this_parent = jQuery(this).parent();
-	
+
 	this_val = jQuery(this).val();
 	marked_val = $marked_textarea.val();
 	jQuery(this).val(marked_val);
@@ -916,13 +920,13 @@ jQuery(".dtable").delegate('textarea.dtable_field', 'focus', function(e) {
 
 	this_height = jQuery(this).height();
 	marked_height = $marked_textarea.height();
-	
+
 	//get styles
 	var this_style = jQuery(this).getStyleObject(['position', 'top', 'left', 'display']);
 	var marked_style = $marked_textarea.getStyleObject(['position', 'top', 'left', 'display']);
 	jQuery(this).css(marked_style);
 	$marked_textarea.css(this_style);
-	
+
 
 	//correct width and height
 	jQuery(this).width(marked_width);
@@ -930,7 +934,7 @@ jQuery(".dtable").delegate('textarea.dtable_field', 'focus', function(e) {
 
 	jQuery(this).height(marked_height);
 	$marked_textarea.height(this_height);
-	
+
 
 	$marked_parent.append(jQuery(this));
 	$this_parent.append($marked_textarea);
