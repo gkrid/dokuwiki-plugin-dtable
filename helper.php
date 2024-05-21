@@ -14,8 +14,7 @@ class helper_plugin_dtable extends dokuwiki_plugin
     function error($code, $json=false)
     {
 		if($json == true) {
-			$json = new JSON();
-			return $json->encode(array('type' => 'error', 'msg' => $this->getLang($code)));
+			return json_encode(array('type' => 'error', 'msg' => $this->getLang($code)));
 		} else {
 			return $this->getLang($code);
 		}

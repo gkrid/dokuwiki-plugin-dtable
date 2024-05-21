@@ -127,15 +127,11 @@ class action_plugin_dtable extends DokuWiki_Action_Plugin {
 	    $event->preventDefault();
 	    $event->stopPropagation();
 
-
-
-	    $json = new JSON();
-
 	    list($dtable_start_line, $dtable_page_id) = explode('_', $_POST['table'], 2);
 	    $file = wikiFN( $dtable_page_id );
 	    if( ! @file_exists( $file  ) )
 	    {
-			echo $json->encode( array('type' => 'error', 'msg' => 'This page does not exist.') );
+			echo json_encode( array('type' => 'error', 'msg' => 'This page does not exist.') );
 			exit(0);
 	    }
 
@@ -145,7 +141,7 @@ class action_plugin_dtable extends DokuWiki_Action_Plugin {
 
 	    if(isset($_POST['remove']))
 	    {
-			$scope = $json->decode($_POST['remove']);
+			$scope = json_decode($_POST['remove'], true);
 
 			$lines_to_remove = array();
 			for ($i = $scope[0]; $i <= $scope[1]; $i++)
@@ -164,7 +160,7 @@ class action_plugin_dtable extends DokuWiki_Action_Plugin {
 
 
 
-			echo $json->encode( array('type' => 'success', 'spans' =>
+			echo json_encode( array('type' => 'success', 'spans' =>
 						$dtable->get_spans($dtable_start_line, $page_lines, $dtable_page_id) ) );
 
 		} else
@@ -176,7 +172,7 @@ class action_plugin_dtable extends DokuWiki_Action_Plugin {
 				if( strpos( $k, 'col' ) === 0)
 				{
 					//remove col from col12, col1 etc. to be 12 1
-					$cols[(int)substr($k, 3)] = $json->decode($v);
+					$cols[(int)substr($k, 3)] = json_decode($v, true);
 				}
 			}
 			ksort($cols);
@@ -216,7 +212,7 @@ class action_plugin_dtable extends DokuWiki_Action_Plugin {
 			{
 				$action = 'edit';
 
-				$scope = $json->decode($_POST['edit']);
+				$scope = json_decode($_POST['edit'], true);
 
 				$lines_to_change = array();
 				for ($i = $scope[0]; $i <= $scope[1]; $i++)
@@ -240,7 +236,7 @@ class action_plugin_dtable extends DokuWiki_Action_Plugin {
 			$new_cont = implode( "\n", $page_lines );
 			saveWikiText($dtable_page_id, $new_cont, $info);
 
-			echo $json->encode( array('type' => 'success', 'action' => $action, 'new_row' => $dtable->parse_line($new_line, $dtable_page_id), 'raw_row' => array($new_table_line, array($line_nr, $line_nr)), 'spans' =>  $dtable->get_spans($dtable_start_line, $page_lines, $dtable_page_id) ) );
+			echo json_encode( array('type' => 'success', 'action' => $action, 'new_row' => $dtable->parse_line($new_line, $dtable_page_id), 'raw_row' => array($new_table_line, array($line_nr, $line_nr)), 'spans' =>  $dtable->get_spans($dtable_start_line, $page_lines, $dtable_page_id) ) );
 
 		}
 	break;
@@ -275,12 +271,10 @@ class action_plugin_dtable extends DokuWiki_Action_Plugin {
 	    } else
 		$expire = $conf['locktime'];
 
-	    $json = new JSON();
-
 	    if($checklock === false)
-	       	echo $json->encode(array('locked' => 0, 'time_left' => $expire));
+	       	echo json_encode(array('locked' => 0, 'time_left' => $expire));
 	    else
-	       	echo $json->encode(array('locked' => 1, 'who' => $checklock, 'time_left' => $expire));
+	       	echo json_encode(array('locked' => 1, 'who' => $checklock, 'time_left' => $expire));
 
 	break;
 	}
