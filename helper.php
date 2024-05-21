@@ -27,7 +27,7 @@ class helper_plugin_dtable extends dokuwiki_plugin
 
     static function line_nr($pos, $file_path, $start_line = 0) {
 		$line_nr = 0;
-		if (!is_array(self::$line_nr_c[$file_path])) {
+		if (!is_array(self::$line_nr_c[$file_path] ?? null)) {
 			self::$line_nr_c[$file_path] = array();
 			$start_pos = 0;
 			$line_nr = 0;
@@ -38,7 +38,7 @@ class helper_plugin_dtable extends dokuwiki_plugin
 
 		if ($start_line > 0) {
 			//find last pos on current line
-			if (($find = array_search($start_line, self::$line_nr_c[$file_path])) !== false) {
+			if (($find = array_search($start_line, self::$line_nr_c[$file_path] ?? [])) !== false) {
 				//the new line charter from last line -> it's nessesery in order to corect work of my handler
 				$start_pos = $find;
 				$pos += $find;

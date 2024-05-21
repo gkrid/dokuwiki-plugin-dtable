@@ -52,7 +52,7 @@ class action_plugin_dtable extends DokuWiki_Action_Plugin {
 		}
 
 		//it will make include plugin behaves correctly
-		p_set_metadata($INFO['id'], array('dtable_pages' => $dtable_pages), false, false);
+		p_set_metadata($INFO['id'] ?? null, array('dtable_pages' => $dtable_pages), false, false);
 
 		//mark dtables
 		//it will not work becouse section editing in dokuwiki needs no modified content.
@@ -85,13 +85,13 @@ class action_plugin_dtable extends DokuWiki_Action_Plugin {
 			$new_lines[] = $line;
 			}
 			$lines = $new_lines;
-		} 
+		}
 		$event->data = implode("\n", $new_lines);
     }
     function add_php_data(&$event, $param) {
 	global $JSINFO, $ID;
 
-	if (auth_quickaclcheck($ID) >= AUTH_EDIT) 
+	if (auth_quickaclcheck($ID) >= AUTH_EDIT)
 	    $JSINFO['write'] = true;
 	else
 	    $JSINFO['write'] = false;
@@ -116,8 +116,8 @@ class action_plugin_dtable extends DokuWiki_Action_Plugin {
 	$JSINFO['lang']['show_merged_rows'] = $this->getLang('show_merged_rows');
 
 	$JSINFO['lang']['lock_notify'] = str_replace(
-	    array('%u', '%t'), 
-	    array('<span class="who"></span>', '<span class="time_left"></span>'), 
+	    array('%u', '%t'),
+	    array('<span class="who"></span>', '<span class="time_left"></span>'),
 	    $this->getLang('lock_notify'));
 	$JSINFO['lang']['unlock_notify'] = $this->getLang('unlock_notify');
     }
@@ -157,7 +157,7 @@ class action_plugin_dtable extends DokuWiki_Action_Plugin {
 
 			$removed_line = '';
 			foreach ($lines_to_remove as $line) {
-				$removed_line .= $page_lines[ $line ]." "; 
+				$removed_line .= $page_lines[ $line ]." ";
 			}
 
 			array_splice($page_lines, $scope[0], $scope[1] - $scope[0] + 1);
@@ -168,7 +168,7 @@ class action_plugin_dtable extends DokuWiki_Action_Plugin {
 
 
 
-			echo $json->encode( array('type' => 'success', 'spans' =>  
+			echo $json->encode( array('type' => 'success', 'spans' =>
 						$dtable->get_spans($dtable_start_line, $page_lines, $dtable_page_id) ) );
 
 		} else
@@ -228,7 +228,7 @@ class action_plugin_dtable extends DokuWiki_Action_Plugin {
 
 				$old_line= '';
 				foreach ($lines_to_change as $line) {
-					$old_line .= $page_lines[ $line ]." "; 
+					$old_line .= $page_lines[ $line ]." ";
 				}
 
 				//$old_line = $page_lines[ $line_to_change ];
@@ -267,7 +267,7 @@ class action_plugin_dtable extends DokuWiki_Action_Plugin {
 	    $event->stopPropagation();
 
 	    $ID = $_POST['page'];
-	    $checklock = checklock($ID); 
+	    $checklock = checklock($ID);
 
 	    //check when lock expire
 	    $lock_file = wikiLockFN($ID);

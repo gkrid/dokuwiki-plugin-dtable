@@ -31,7 +31,7 @@ class syntax_plugin_dtable extends DokuWiki_Syntax_Plugin {
           case DOKU_LEXER_ENTER :
 	      try {
 		  		$table_nr = (int) substr($match, 5, 2);
-                return array($state, array($pos, $table_nr, p_get_metadata($INFO['id'] ?? $ID, 'dtable_pages')));
+                return array($state, array($pos, $table_nr, p_get_metadata($INFO['id'] ?? null, 'dtable_pages')));
 	      } catch(Exception $e)
 	      {
 		  return array($state, false);
