@@ -108,6 +108,7 @@ class helper_plugin_dtable extends dokuwiki_plugin
 		return $spans;
 	}
     function format_row($array_line) {
+        $line = '';
 		foreach ($array_line as $cell)
 		{
 			if ($cell[0] == 'tableheader_open')
