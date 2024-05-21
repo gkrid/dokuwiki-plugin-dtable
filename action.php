@@ -135,7 +135,7 @@ class action_plugin_dtable extends DokuWiki_Action_Plugin {
 			exit(0);
 	    }
 
-	    $dtable =& plugin_load('helper', 'dtable');
+	    $dtable = plugin_load('helper', 'dtable');
 
 	    $page_lines = explode( "\n", io_readFile( $file ) );
 

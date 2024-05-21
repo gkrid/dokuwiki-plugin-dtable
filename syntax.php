@@ -49,7 +49,7 @@ class syntax_plugin_dtable extends DokuWiki_Syntax_Plugin {
 		{
 		    if (auth_quickaclcheck($ID) >= AUTH_EDIT)
 		    {
-			$dtable =& plugin_load('helper', 'dtable');
+			$dtable = plugin_load('helper', 'dtable');
 
 			$pos = $match[0];
 			$table_nr = $match[1];
