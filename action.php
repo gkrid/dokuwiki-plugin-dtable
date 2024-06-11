@@ -1,9 +1,5 @@
 <?php
-// must be run within DokuWiki
-if(!defined('DOKU_INC')) die();
 
-if(!defined('DOKU_PLUGIN')) define('DOKU_PLUGIN',DOKU_INC.'lib/plugins/');
-require_once DOKU_PLUGIN.'syntax.php';
 
 /**
  * All DokuWiki plugins to extend the parser/rendering mechanism
@@ -52,7 +48,7 @@ class action_plugin_dtable extends DokuWiki_Action_Plugin {
 		}
 
 		//it will make include plugin behaves correctly
-		p_set_metadata($INFO['id'], array('dtable_pages' => $dtable_pages), false, false);
+		p_set_metadata($INFO['id'] ?? null, array('dtable_pages' => $dtable_pages), false, false);
 
 		//mark dtables
 		//it will not work becouse section editing in dokuwiki needs no modified content.
@@ -85,13 +81,13 @@ class action_plugin_dtable extends DokuWiki_Action_Plugin {
 			$new_lines[] = $line;
 			}
 			$lines = $new_lines;
-		} 
+		}
 		$event->data = implode("\n", $new_lines);
     }
     function add_php_data(&$event, $param) {
 	global $JSINFO, $ID;
 
-	if (auth_quickaclcheck($ID) >= AUTH_EDIT) 
+	if (auth_quickaclcheck($ID) >= AUTH_EDIT)
 	    $JSINFO['write'] = true;
 	else
 	    $JSINFO['write'] = false;
@@ -116,8 +112,8 @@ class action_plugin_dtable extends DokuWiki_Action_Plugin {
 	$JSINFO['lang']['show_merged_rows'] = $this->getLang('show_merged_rows');
 
 	$JSINFO['lang']['lock_notify'] = str_replace(
-	    array('%u', '%t'), 
-	    array('<span class="who"></span>', '<span class="time_left"></span>'), 
+	    array('%u', '%t'),
+	    array('<span class="who"></span>', '<span class="time_left"></span>'),
 	    $this->getLang('lock_notify'));
 	$JSINFO['lang']['unlock_notify'] = $this->getLang('unlock_notify');
     }
@@ -131,25 +127,21 @@ class action_plugin_dtable extends DokuWiki_Action_Plugin {
 	    $event->preventDefault();
 	    $event->stopPropagation();
 
-
-
-	    $json = new JSON();
-
 	    list($dtable_start_line, $dtable_page_id) = explode('_', $_POST['table'], 2);
 	    $file = wikiFN( $dtable_page_id );
 	    if( ! @file_exists( $file  ) )
 	    {
-			echo $json->encode( array('type' => 'error', 'msg' => 'This page does not exist.') );
+			echo json_encode( array('type' => 'error', 'msg' => 'This page does not exist.') );
 			exit(0);
 	    }
 
-	    $dtable =& plugin_load('helper', 'dtable');
+	    $dtable = plugin_load('helper', 'dtable');
 
 	    $page_lines = explode( "\n", io_readFile( $file ) );
 
 	    if(isset($_POST['remove']))
 	    {
-			$scope = $json->decode($_POST['remove']);
+			$scope = json_decode($_POST['remove'], true);
 
 			$lines_to_remove = array();
 			for ($i = $scope[0]; $i <= $scope[1]; $i++)
@@ -157,7 +149,7 @@ class action_plugin_dtable extends DokuWiki_Action_Plugin {
 
 			$removed_line = '';
 			foreach ($lines_to_remove as $line) {
-				$removed_line .= $page_lines[ $line ]." "; 
+				$removed_line .= $page_lines[ $line ]." ";
 			}
 
 			array_splice($page_lines, $scope[0], $scope[1] - $scope[0] + 1);
@@ -168,7 +160,7 @@ class action_plugin_dtable extends DokuWiki_Action_Plugin {
 
 
 
-			echo $json->encode( array('type' => 'success', 'spans' =>  
+			echo json_encode( array('type' => 'success', 'spans' =>
 						$dtable->get_spans($dtable_start_line, $page_lines, $dtable_page_id) ) );
 
 		} else
@@ -180,7 +172,7 @@ class action_plugin_dtable extends DokuWiki_Action_Plugin {
 				if( strpos( $k, 'col' ) === 0)
 				{
 					//remove col from col12, col1 etc. to be 12 1
-					$cols[(int)substr($k, 3)] = $json->decode($v);
+					$cols[(int)substr($k, 3)] = json_decode($v, true);
 				}
 			}
 			ksort($cols);
@@ -220,7 +212,7 @@ class action_plugin_dtable extends DokuWiki_Action_Plugin {
 			{
 				$action = 'edit';
 
-				$scope = $json->decode($_POST['edit']);
+				$scope = json_decode($_POST['edit'], true);
 
 				$lines_to_change = array();
 				for ($i = $scope[0]; $i <= $scope[1]; $i++)
@@ -228,7 +220,7 @@ class action_plugin_dtable extends DokuWiki_Action_Plugin {
 
 				$old_line= '';
 				foreach ($lines_to_change as $line) {
-					$old_line .= $page_lines[ $line ]." "; 
+					$old_line .= $page_lines[ $line ]." ";
 				}
 
 				//$old_line = $page_lines[ $line_to_change ];
@@ -244,7 +236,7 @@ class action_plugin_dtable extends DokuWiki_Action_Plugin {
 			$new_cont = implode( "\n", $page_lines );
 			saveWikiText($dtable_page_id, $new_cont, $info);
 
-			echo $json->encode( array('type' => 'success', 'action' => $action, 'new_row' => $dtable->parse_line($new_line, $dtable_page_id), 'raw_row' => array($new_table_line, array($line_nr, $line_nr)), 'spans' =>  $dtable->get_spans($dtable_start_line, $page_lines, $dtable_page_id) ) );
+			echo json_encode( array('type' => 'success', 'action' => $action, 'new_row' => $dtable->parse_line($new_line, $dtable_page_id), 'raw_row' => array($new_table_line, array($line_nr, $line_nr)), 'spans' =>  $dtable->get_spans($dtable_start_line, $page_lines, $dtable_page_id) ) );
 
 		}
 	break;
@@ -267,7 +259,7 @@ class action_plugin_dtable extends DokuWiki_Action_Plugin {
 	    $event->stopPropagation();
 
 	    $ID = $_POST['page'];
-	    $checklock = checklock($ID); 
+	    $checklock = checklock($ID);
 
 	    //check when lock expire
 	    $lock_file = wikiLockFN($ID);
@@ -279,12 +271,10 @@ class action_plugin_dtable extends DokuWiki_Action_Plugin {
 	    } else
 		$expire = $conf['locktime'];
 
-	    $json = new JSON();
-
 	    if($checklock === false)
-	       	echo $json->encode(array('locked' => 0, 'time_left' => $expire));
+	       	echo json_encode(array('locked' => 0, 'time_left' => $expire));
 	    else
-	       	echo $json->encode(array('locked' => 1, 'who' => $checklock, 'time_left' => $expire));
+	       	echo json_encode(array('locked' => 1, 'who' => $checklock, 'time_left' => $expire));
 
 	break;
 	}

@@ -1,9 +1,5 @@
 <?php
-// must be run within DokuWiki
-if(!defined('DOKU_INC')) die();
 
-if(!defined('DOKU_PLUGIN')) define('DOKU_PLUGIN',DOKU_INC.'lib/plugins/');
-require_once DOKU_PLUGIN.'syntax.php';
 require_once DOKU_INC.'inc/parser/parser.php';
 
 /**
@@ -18,16 +14,15 @@ class helper_plugin_dtable extends dokuwiki_plugin
     function error($code, $json=false)
     {
 		if($json == true) {
-			$json = new JSON();
-			return $json->encode(array('type' => 'error', 'msg' => $this->getLang($code)));
+			return json_encode(array('type' => 'error', 'msg' => $this->getLang($code)));
 		} else {
 			return $this->getLang($code);
 		}
     }
 
-    function line_nr($pos, $file_path, $start_line = 0) {
+    static function line_nr($pos, $file_path, $start_line = 0) {
 		$line_nr = 0;
-		if (!is_array(self::$line_nr_c[$file_path])) {
+		if (!is_array(self::$line_nr_c[$file_path] ?? null)) {
 			self::$line_nr_c[$file_path] = array();
 			$start_pos = 0;
 			$line_nr = 0;
@@ -38,13 +33,13 @@ class helper_plugin_dtable extends dokuwiki_plugin
 
 		if ($start_line > 0) {
 			//find last pos on current line
-			if (($find = array_search($start_line, self::$line_nr_c[$file_path])) !== false) {
+			if (($find = array_search($start_line, self::$line_nr_c[$file_path] ?? [])) !== false) {
 				//the new line charter from last line -> it's nessesery in order to corect work of my handler
 				$start_pos = $find;
 				$pos += $find;
 			} else {
 				if (self::$file_cont == NULL)
-					self::$file_cont = io_readFile($file_path);	
+					self::$file_cont = io_readFile($file_path);
 
 				for($i = $start_pos; $i < strlen(self::$file_cont) && $line_nr < $start_line; $i++) {
 					self::$line_nr_c[$file_path][$i] = $line_nr;
@@ -65,7 +60,7 @@ class helper_plugin_dtable extends dokuwiki_plugin
 			return self::$line_nr_c[$file_path][$pos];
 		} else {
 			if (self::$file_cont == NULL)
-				self::$file_cont = io_readFile($file_path);	
+				self::$file_cont = io_readFile($file_path);
 
 			for($i=$start_pos;$i <= $pos; $i++)
 			{
@@ -89,7 +84,7 @@ class helper_plugin_dtable extends dokuwiki_plugin
 		}
 
 		return $Parser->parse($row);
-		
+
 	}
 	function get_spans($start_line, $page_lines, $page_id) {
 		$table = '';
@@ -108,6 +103,7 @@ class helper_plugin_dtable extends dokuwiki_plugin
 		return $spans;
 	}
     function format_row($array_line) {
+        $line = '';
 		foreach ($array_line as $cell)
 		{
 			if ($cell[0] == 'tableheader_open')
@@ -152,7 +148,7 @@ class helper_plugin_dtable_handler {
 	public $type;
 	public $file_path;
 	public $start_line;
-	
+
 	public function __construct($page_id, $start_line) {
 		$this->file_path = wikiFN($page_id);
 		$this->start_line = $start_line;
@@ -245,6 +241,10 @@ class helper_plugin_dtable_handler {
 	* @return bool If parsing should be continue
 	*/
     public function __call($name, $params) {
+        if($this->calls === null) $this->calls = [];
+        if(!isset($this->calls[$this->row][0][$this->cell][3])) {
+            $this->calls[$this->row][0][$this->cell][3] = '';
+        }
 		$this->calls[$this->row][0][$this->cell][3] .= $params[0];
 		return true;
     }
